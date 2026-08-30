@@ -44,7 +44,7 @@ jobs:
             echo "❌ Error: Unbound Makefile not found!" && exit 1
           fi
 
-      # 🟩 CLEAN PRE-SEED SELECTION LAYER: Sets target architecture without problematic package layers
+      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER: Sets target architecture
       - name: Pre-Configure Target Profile and Core Feature Modules
         run: |
           cd openwrt
@@ -58,11 +58,48 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🟩 THE PRO OPENER: Your original working D-Link tmate layout
+      # 🟩 PURE BASH ENTRY ROOM: Completely unbuffered link generation via Pinggy tunnels
       - name: Open Secure Live Interactive Build Connection
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: false
+        run: |
+          echo "🔓 Adjusting host login policies for anonymous configuration overrides..."
+          sudo mkdir -p /var/run/sshd
+          echo "root:openwrt" | sudo chpasswd
+          sudo sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+          sudo sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          sudo systemctl restart ssh
+          
+          echo "🌐 Launching Pinggy Reverse TCP Proxy connection Layer..."
+          # Opens an unbuffered direct text tunnel and pushes connection keys to a local log file instantly
+          ssh -p 443 -R0:localhost:22 -o StrictHostKeyChecking=no -o ConnectTimeout=10 a.pinggy.io "t=tcp" > /tmp/pinggy.log 2>&1 &
+          
+          echo "⏳ Syncing server ports..."
+          sleep 8
+          
+          echo "========================================================================"
+          echo "🔥 JIO BUILD ROOM ACTIVE! COPY THE COMMAND BELOW TO LOG IN: 🔥"
+          echo "========================================================================"
+          # Parse and pull down the explicit connection string directly out of the generated log block
+          RAW_CMD=$(grep -oE "ssh -p [0-9]+ root@.[a-zA-Z0-9.]+" /tmp/pinggy.log | head -n 1)
+          
+          if [ -z "$RAW_CMD" ]; then
+            echo "⚠️ Buffering check fallback... Content of connection dump:"
+            cat /tmp/pinggy.log
+          else
+            echo "👉 PASTE THIS EXACT CODE STRIP INTO YOUR POWERSHELL:"
+            echo "$RAW_CMD"
+            echo ""
+            echo "🔐 WHEN IT ASKS FOR PASSWORD, ENTER: openwrt"
+          fi
+          echo "========================================================================"
+          echo "👉 Run this command inside terminal when done: touch /tmp/done"
+          echo "========================================================================"
+          
+          rm -f /tmp/done
+          while [ ! -f /tmp/done ]; do
+            sleep 5
+          done
+          echo "🏁 Closing session room and starting asset compilation upload pipeline..."
 
       # 🟩 THE FIXER: Collects, stages, and uploads compiled package artifacts when you exit terminal
       - name: Securely Upload Compiled APK Artifacts to GitHub Dashboard
