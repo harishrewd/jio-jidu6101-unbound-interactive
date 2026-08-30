@@ -86,7 +86,7 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🟩 PURE BASH ENTRY ROOM: Typo fixed folder path to sources.list.d/
+      # 🟩 PURE BASH ENTRY ROOM: Swapped out apt packages for direct stable binary downloads
       - name: Open Secure Live Interactive Build Connection
         run: |
           echo "🔓 Adjusting host login policies for anonymous configuration overrides..."
@@ -97,22 +97,26 @@ jobs:
           sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
           sudo systemctl restart ssh
           
-          echo "💾 Downloading direct open terminal engine..."
-          curl -s https://amazonaws.com | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
-          
-          # 🔥 FIX: Changed sources.list.p to the correct system path sources.list.d
-          echo "deb https://amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list >/dev/null
-          sudo apt update && sudo apt install -y ngrok
+          echo "💾 Downloading standalone tunnel binary directly..."
+          wget -q https://equinox.io
+          sudo tar -xzf ngrok-v3-stable-linux-amd64.tgz -C /usr/local/bin/
+          rm -f ngrok-v3-stable-linux-amd64.tgz
           
           echo "🌐 Starting backend tunnel routing layers..."
           ngrok config add-authtoken 2Xf7g9Z1K4mLvNzPqRwS_3y8x9W7V5U3T1S
           ngrok tcp 22 --log=stdout > /dev/null &
           
-          sleep 5
+          sleep 6
           echo "========================================================================"
           echo "🔥 JIO BUILD ROOM ACTIVE! COPY THE COMMAND BELOW TO LOG IN: 🔥"
           echo "========================================================================"
           TUNNEL_URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+          
+          # Verification logic patch in case API renders array strings out of order
+          if [ "$TUNNEL_URL" = "null" ] || [ -z "$TUNNEL_URL" ]; then
+            TUNNEL_URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels.public_url')
+          fi
+          
           CLEAN_URL=$(echo $TUNNEL_URL | sed 's|tcp://||')
           HOST=$(echo $CLEAN_URL | cut -d':' -f1)
           PORT=$(echo $CLEAN_URL | cut -d':' -f2)
