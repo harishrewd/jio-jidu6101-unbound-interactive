@@ -43,7 +43,7 @@ jobs:
             echo "❌ Error: Unbound Makefile not found!" && exit 1
           fi
 
-      # 🟩 PRE-CONFIGURED SPECIFICALLY FOR JIO AX6000 JIDU6101
+      # 🟩 TARGETING JIO AX6000 JIDU6101 PROFILE NATIVELY
       - name: Pre-Configure Target Profile and Core Feature Modules
         run: |
           cd openwrt
@@ -79,12 +79,7 @@ jobs:
           echo "CONFIG_PACKAGE_libunbound_subnet=y" >> .config
           make defconfig
 
-      # 🟩 ANTI-DISCONNECT HEARTBEAT
-      - name: Launch Background Network Keep-Alive
-        run: |
-          bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
-
-      # 🟩 THE PRO OPENER
+      # 🟩 THE PRO OPENER (No loops blocking it this time)
       - name: Open Secure Live Interactive Build Connection
         uses: mxschmitt/action-tmate@v3
         with:
