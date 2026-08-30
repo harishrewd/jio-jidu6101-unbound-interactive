@@ -44,15 +44,17 @@ jobs:
             echo "❌ Error: Unbound Makefile not found!" && exit 1
           fi
 
-      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER: Swapped config profiles directly to target Jio JIDU6101
+      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER: Clean configuration injection
       - name: Pre-Configure Target Profile and Core Feature Modules
         run: |
           cd openwrt
+          
+          # Inject Target Architecture
           echo "CONFIG_TARGET_mediatek=y" > .config
           echo "CONFIG_TARGET_mediatek_filogic=y" >> .config
           echo "CONFIG_TARGET_mediatek_filogic_DEVICE_jio_jidu-6101=y" >> .config
           
-          # Force inclusion of all complete package selection matrices explicitly
+          # Force inclusion of package selection matrices explicitly
           echo "CONFIG_PACKAGE_kmod-cryptodev=m" >> .config
           echo "CONFIG_PACKAGE_libopenssl=m" >> .config
           echo "CONFIG_PACKAGE_libopenssl-conf=m" >> .config
@@ -78,6 +80,9 @@ jobs:
           echo "CONFIG_PACKAGE_libunbound_libevent=y" >> .config
           echo "CONFIG_PACKAGE_libunbound_libpthread=y" >> .config
           echo "CONFIG_PACKAGE_libunbound_subnet=y" >> .config
+          
+          # 🔥 FIX: Pipes a default answer to all unexpected submodule dependency prompts to prevent hanging
+          yes "" | make oldconfig
           make defconfig
 
       # 🟩 ANTI-DISCONNECT HEARTBEAT: Automatically sends data traffic to stop idle dropouts
@@ -85,7 +90,7 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🟩 THE PRO OPENER: Reverted to your exact working original D-Link plugin engine
+      # 🟩 THE PRO OPENER: Uses your exact working original D-Link tmate engine layout
       - name: Open Secure Live Interactive Build Connection
         uses: mxschmitt/action-tmate@v3
         with:
