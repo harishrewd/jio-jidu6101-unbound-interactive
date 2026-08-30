@@ -44,13 +44,15 @@ jobs:
             echo "❌ Error: Unbound Makefile not found!" && exit 1
           fi
 
-      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER: Configured for Jio JIDU6101
+      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER: Fixed device profile naming convention
       - name: Pre-Configure Target Profile and Core Feature Modules
         run: |
           cd openwrt
           echo "CONFIG_TARGET_mediatek=y" > .config
           echo "CONFIG_TARGET_mediatek_filogic=y" >> .config
-          echo "CONFIG_TARGET_mediatek_filogic_DEVICE_jio_jidu6101=y" >> .config
+          
+          # 🔥 FIX: Changed from jio_jidu6101 to the correct OpenWrt internal naming layout
+          echo "CONFIG_TARGET_mediatek_filogic_DEVICE_jio_jidu-6101=y" >> .config
           
           echo "CONFIG_PACKAGE_kmod-cryptodev=m" >> .config
           echo "CONFIG_PACKAGE_libopenssl=m" >> .config
@@ -84,33 +86,11 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🟩 PURE BASH ENTRY ROOM: Non-blocking background session lock
+      # 🟩 THE PRO OPENER: Swapped back to your original working D-Link tmate configuration engine
       - name: Open Secure Live Interactive Build Connection
-        run: |
-          sudo apt-get update -y && sudo apt-get install -y tmate
-          rm -f /tmp/done
-          
-          echo "🚀 Initializing interactive build session background..."
-          tmate -S /tmp/tmate.sock new-session -d
-          
-          echo "⏳ Waiting for network loop synchronization..."
-          while ! tmate -S /tmp/tmate.sock wait tmate-ready 2>/dev/null; do sleep 1; done
-          
-          echo "========================================================================"
-          echo "🔥 JIO BUILD ROOM ACTIVE! COPY ONE OF THE LINKS BELOW TO LOG IN: 🔥"
-          echo "========================================================================"
-          tmate -S /tmp/tmate.sock display -p '🖥️ SSH TERMINAL LINK: #{tmate_ssh}'
-          tmate -S /tmp/tmate.sock display -p '🌐 WEB BROWSER TERMINAL LINK: #{tmate_web}'
-          echo "========================================================================"
-          echo "👉 CRITICAL REMINDER: Once you complete your compilation inside the terminal,"
-          echo "👉 run this command to save and close the machine: touch /tmp/done"
-          echo "========================================================================"
-          
-          # Maintain background engine looping state securely
-          while [ ! -f /tmp/done ]; do
-            sleep 5
-          done
-          echo "🏁 Closing session room and starting asset compilation upload pipeline..."
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: false
 
       # 🟩 THE FIXER: Collects, stages, and uploads compiled package artifacts when you exit terminal
       - name: Securely Upload Compiled APK Artifacts to GitHub Dashboard
