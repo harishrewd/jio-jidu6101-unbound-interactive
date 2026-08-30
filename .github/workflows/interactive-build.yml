@@ -99,6 +99,7 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         with:
           limit-access-to-actor: false
+          install-dependencies: false  # ➔ 🔥 FIXED: Skips the apt check so the links generate instantly
 
       # 🟩 THE FIXER: Collects, stages, and uploads compiled package artifacts when you exit terminal
       - name: Securely Upload Compiled APK Artifacts to GitHub Dashboard
