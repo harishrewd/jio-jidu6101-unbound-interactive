@@ -44,7 +44,7 @@ jobs:
             echo "❌ Error: Unbound Makefile not found!" && exit 1
           fi
 
-      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER: Configured for Jio JIDU6101
+      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER: Swapped config profiles directly to target Jio JIDU6101
       - name: Pre-Configure Target Profile and Core Feature Modules
         run: |
           cd openwrt
@@ -52,6 +52,7 @@ jobs:
           echo "CONFIG_TARGET_mediatek_filogic=y" >> .config
           echo "CONFIG_TARGET_mediatek_filogic_DEVICE_jio_jidu-6101=y" >> .config
           
+          # Force inclusion of all complete package selection matrices explicitly
           echo "CONFIG_PACKAGE_kmod-cryptodev=m" >> .config
           echo "CONFIG_PACKAGE_libopenssl=m" >> .config
           echo "CONFIG_PACKAGE_libopenssl-conf=m" >> .config
@@ -84,41 +85,11 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🟩 PURE BASH ENTRY ROOM: Forced wake-up call to pop the links out instantly!
+      # 🟩 THE PRO OPENER: Reverted to your exact working original D-Link plugin engine
       - name: Open Secure Live Interactive Build Connection
-        run: |
-          sudo apt-get update -y && sudo apt-get install -y tmate
-          rm -f /tmp/done
-          
-          echo "🚀 Initializing interactive build session backend..."
-          tmate -S /tmp/tmate.sock new-session -d
-          
-          echo "🔌 Waking up connection protocols..."
-          # This forces the daemon to instantly look for network sockets instead of idling
-          tmate -S /tmp/tmate.sock wait tmate-ready
-          
-          echo "⏳ Rendering unbuffered terminal links..."
-          SSH_LINK=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
-          WEB_LINK=$(tmate -S /tmp/tmate.sock display -p '#{tmate_web}')
-          
-          echo "========================================================================"
-          echo "🔥 JIO BUILD ROOM ACTIVE! COPY ONE OF THE LINKS BELOW TO LOG IN: 🔥"
-          echo "========================================================================"
-          echo "🖥️  SSH CONNECTION COMMAND:"
-          echo "$SSH_LINK"
-          echo ""
-          echo "🌐  WEB BROWSER TAB CONNECTION LINK:"
-          echo "$WEB_LINK"
-          echo "========================================================================"
-          echo "👉 CRITICAL REMINDER: Once you complete your compilation inside the terminal,"
-          echo "👉 run this command to save and close the machine: touch /tmp/done"
-          echo "========================================================================"
-          
-          # Keep the main GitHub workflow thread alive until you type touch /tmp/done inside terminal
-          while [ ! -f /tmp/done ]; do
-            sleep 5
-          done
-          echo "🏁 Closing session room and starting asset compilation upload pipeline..."
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: false
 
       # 🟩 THE FIXER: Collects, stages, and uploads compiled package artifacts when you exit terminal
       - name: Securely Upload Compiled APK Artifacts to GitHub Dashboard
