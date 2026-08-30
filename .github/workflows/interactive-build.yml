@@ -36,23 +36,15 @@ jobs:
             sed -i 's|PKG_RELEASE:=.*|PKG_RELEASE:=600|g' "$MAKEFILE_PATH"
             
             # 🔍 1. WHERE TCP FAST OPEN (TFO) LIVES:
-            # Maps parameters cleanly inside core configuration arguments array including TCP Fast Open, CacheDB, and CFLAGS.
-            # Injects --enable-tfo-client next to server-side anchor to force client/server TFO feature compilation.
             sed -i 's|--enable-tfo-server|--enable-tfo-server --enable-tfo-client --enable-cachedb --with-libhiredis=$(STAGING_DIR)/usr|g' "$MAKEFILE_PATH"
-            
-            # 🔍 THE MODULE RECOVERY WATCH: Explicitly verifies and preserves your exact module compilation sequence
             sed -i 's|subnetcache ipset respip validator iterator|subnetcache ipset respip validator cachedb iterator|g' "$MAKEFILE_PATH"
-            
-            # Append Redis library dependency mapping tracking hooks
             sed -i 's|\$(call Package/unbound/Default)|\$(call Package/unbound/Default)\n  DEPENDS+= +libhiredis +libmnl|g' "$MAKEFILE_PATH"
-            
-            # 🔍 THE SYMBOL STRIPPER: Removes allsymbols flag mapping to keep your optimization layouts clean
             sed -i 's|--enable-allsymbols||g' "$MAKEFILE_PATH"
           else
             echo "❌ Error: Unbound Makefile not found!" && exit 1
           fi
 
-      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER: Swapped config profiles directly to target Jio JIDU6101
+      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER: Configured for Jio JIDU6101
       - name: Pre-Configure Target Profile and Core Feature Modules
         run: |
           cd openwrt
@@ -60,7 +52,6 @@ jobs:
           echo "CONFIG_TARGET_mediatek_filogic=y" >> .config
           echo "CONFIG_TARGET_mediatek_filogic_DEVICE_jio_jidu6101=y" >> .config
           
-          # Force inclusion of all complete package selection matrices explicitly
           echo "CONFIG_PACKAGE_kmod-cryptodev=m" >> .config
           echo "CONFIG_PACKAGE_libopenssl=m" >> .config
           echo "CONFIG_PACKAGE_libopenssl-conf=m" >> .config
@@ -81,7 +72,6 @@ jobs:
           echo "CONFIG_PACKAGE_unbound-host=m" >> .config
           
           # 🔍 2. WHERE DNSCRYPT LIVES:
-          # Forces the configuration layer to build the complete DNSCrypt submodule layer straight into Unbound.
           echo "CONFIG_PACKAGE_libunbound_dnscrypt=y" >> .config
           echo "CONFIG_PACKAGE_libunbound_ipset=y" >> .config
           echo "CONFIG_PACKAGE_libunbound_libevent=y" >> .config
@@ -94,18 +84,20 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🟩 MANUAL TMATE INSTALLATION: Installs tmate manually to prevent Error 127
-      - name: Install Interactive Terminal Engine Manually
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y tmate
-
-      # 🟩 THE PRO OPENER: Pauses the machine right here BEFORE any toolchain compilation happens
+      # 🟩 PURE BASH ENTRY ROOM: Zero plugin dependencies, prints the connection strings instantly!
       - name: Open Secure Live Interactive Build Connection
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: false
-          install-dependencies: false
+        run: |
+          sudo apt-get update -y && sudo apt-get install -y tmate
+          echo "========================================================================"
+          echo "🔥 JIO BUILD ROOM ACTIVE! COPY ONE OF THE LINKS BELOW TO LOG IN: 🔥"
+          echo "========================================================================"
+          tmate -S /tmp/tmate.sock new-session -d
+          tmate -S /tmp/tmate.sock wait tmate-ready
+          tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'
+          tmate -S /tmp/tmate.sock display -p '#{tmate_web}'
+          echo "========================================================================"
+          echo "Waiting for you to finish compilation... Type 'exit' inside terminal when done!"
+          tmate -S /tmp/tmate.sock attach
 
       # 🟩 THE FIXER: Collects, stages, and uploads compiled package artifacts when you exit terminal
       - name: Securely Upload Compiled APK Artifacts to GitHub Dashboard
