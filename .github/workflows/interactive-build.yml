@@ -92,12 +92,17 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🟩 NATIVE TMATE SESSION INJECTOR (Fixed wait command typo)
+      # 🟩 NATIVE TMATE SESSION INJECTOR (With Foolproof Connection String Loop)
       - name: Open Secure Live Interactive Build Connection
         run: |
           sudo apt-get update && sudo apt-get install -y tmate openssh-client xz-utils
           tmate -S /tmp/tmate.sock new-session -d
-          tmate -S /tmp/tmate.sock wait-opened
+          
+          echo "⏳ Waiting for tmate server connection to stabilize..."
+          while [ -z "$(tmate -S /tmp/tmate.sock display -p '#{tmate_web}')" ]; do
+            sleep 2
+          done
+          
           echo "================================================================================"
           echo "🚀 NATIVE TMATE SESSION ACTIVE - CLICK OR COPY THE LINKS BELOW:"
           echo "================================================================================"
@@ -109,6 +114,7 @@ jobs:
           echo "================================================================================"
           echo "Paste your Runbook Phase commands into the terminal window. Type 'exit' to upload."
           echo "================================================================================"
+          
           while [ -S /tmp/tmate.sock ]; do sleep 5; done
 
       # 🟩 THE FIXER
