@@ -94,12 +94,18 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
+      # 🟩 MANUAL TMATE INSTALLATION: Installs tmate manually to prevent Error 127
+      - name: Install Interactive Terminal Engine Manually
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y tmate
+
       # 🟩 THE PRO OPENER: Pauses the machine right here BEFORE any toolchain compilation happens
       - name: Open Secure Live Interactive Build Connection
         uses: mxschmitt/action-tmate@v3
         with:
           limit-access-to-actor: false
-          install-dependencies: false  # ➔ 🔥 FIXED: Skips the apt check so the links generate instantly
+          install-dependencies: false
 
       # 🟩 THE FIXER: Collects, stages, and uploads compiled package artifacts when you exit terminal
       - name: Securely Upload Compiled APK Artifacts to GitHub Dashboard
