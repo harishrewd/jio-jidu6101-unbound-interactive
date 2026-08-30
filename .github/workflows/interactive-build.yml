@@ -84,17 +84,21 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🟩 PURE BASH ENTRY ROOM: Zero plugin dependencies, prints the connection strings instantly!
+      # 🟩 PURE BASH ENTRY ROOM: Patched with network initialization delay
       - name: Open Secure Live Interactive Build Connection
         run: |
           sudo apt-get update -y && sudo apt-get install -y tmate
+          echo "🚀 Initializing interactive build session backend..."
+          tmate -S /tmp/tmate.sock new-session -d
+          
+          echo "⏳ Waiting 10 seconds for network loops to establish connections cleanly..."
+          sleep 10
+          
           echo "========================================================================"
           echo "🔥 JIO BUILD ROOM ACTIVE! COPY ONE OF THE LINKS BELOW TO LOG IN: 🔥"
           echo "========================================================================"
-          tmate -S /tmp/tmate.sock new-session -d
-          tmate -S /tmp/tmate.sock wait tmate-ready
-          tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'
-          tmate -S /tmp/tmate.sock display -p '#{tmate_web}'
+          tmate -S /tmp/tmate.sock display -p '🖥️ SSH TERMINAL LINK: #{tmate_ssh}'
+          tmate -S /tmp/tmate.sock display -p '🌐 WEB BROWSER TERMINAL LINK: #{tmate_web}'
           echo "========================================================================"
           echo "Waiting for you to finish compilation... Type 'exit' inside terminal when done!"
           tmate -S /tmp/tmate.sock attach
