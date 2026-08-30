@@ -84,7 +84,7 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🟩 PURE BASH ENTRY ROOM: Uses a live loop to wait for tmate tokens to register completely
+      # 🟩 PURE BASH ENTRY ROOM: Forced wake-up call to pop the links out instantly!
       - name: Open Secure Live Interactive Build Connection
         run: |
           sudo apt-get update -y && sudo apt-get install -y tmate
@@ -93,31 +93,28 @@ jobs:
           echo "🚀 Initializing interactive build session backend..."
           tmate -S /tmp/tmate.sock new-session -d
           
-          echo "⏳ Waiting for terminal engine to grab connection sockets..."
-          while true; do
-            SSH_LINK=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}' 2>/dev/null)
-            WEB_LINK=$(tmate -S /tmp/tmate.sock display -p '#{tmate_web}' 2>/dev/null)
-            
-            # Stop the loop only when both variables have real server text entries
-            if [ ! -z "$SSH_LINK" ] && [ ! -z "$WEB_LINK" ]; then
-              echo "========================================================================"
-              echo "🔥 JIO BUILD ROOM ACTIVE! COPY ONE OF THE LINKS BELOW TO LOG IN: 🔥"
-              echo "========================================================================"
-              echo "🖥️  SSH CONNECTION COMMAND:"
-              echo "$SSH_LINK"
-              echo ""
-              echo "🌐  WEB BROWSER TAB CONNECTION LINK:"
-              echo "$WEB_LINK"
-              echo "========================================================================"
-              echo "👉 CRITICAL REMINDER: Once you complete your compilation inside the terminal,"
-              echo "👉 run this command to save and close the machine: touch /tmp/done"
-              echo "========================================================================"
-              break
-            fi
-            sleep 2
-          done
+          echo "🔌 Waking up connection protocols..."
+          # This forces the daemon to instantly look for network sockets instead of idling
+          tmate -S /tmp/tmate.sock wait tmate-ready
           
-          # Keep the main GitHub workflow thread alive until you exit manually
+          echo "⏳ Rendering unbuffered terminal links..."
+          SSH_LINK=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
+          WEB_LINK=$(tmate -S /tmp/tmate.sock display -p '#{tmate_web}')
+          
+          echo "========================================================================"
+          echo "🔥 JIO BUILD ROOM ACTIVE! COPY ONE OF THE LINKS BELOW TO LOG IN: 🔥"
+          echo "========================================================================"
+          echo "🖥️  SSH CONNECTION COMMAND:"
+          echo "$SSH_LINK"
+          echo ""
+          echo "🌐  WEB BROWSER TAB CONNECTION LINK:"
+          echo "$WEB_LINK"
+          echo "========================================================================"
+          echo "👉 CRITICAL REMINDER: Once you complete your compilation inside the terminal,"
+          echo "👉 run this command to save and close the machine: touch /tmp/done"
+          echo "========================================================================"
+          
+          # Keep the main GitHub workflow thread alive until you type touch /tmp/done inside terminal
           while [ ! -f /tmp/done ]; do
             sleep 5
           done
