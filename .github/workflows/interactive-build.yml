@@ -92,16 +92,24 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🟩 FORCE REFRESH PENDING PACKAGES (Cleans up the 36 hanging updates instantly)
-      - name: Force Clean Ubuntu System Package Upgrades
-        run: |
-          sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y -q
-
-      # 🟩 THE PRO OPENER
+      # 🟩 NATIVE TMATE SESSION INJECTOR (Completely bypasses buggy action plugin framework)
       - name: Open Secure Live Interactive Build Connection
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: false
+        run: |
+          sudo apt-get update && sudo apt-get install -y tmate openssh-client xz-utils
+          tmate -S /tmp/tmate.sock new-session -d
+          tmate -S /tmp/tmate.sock wait-os
+          echo "================================================================================"
+          echo "🚀 NATIVE TMATE SESSION ACTIVE - CLICK OR COPY THE LINKS BELOW:"
+          echo "================================================================================"
+          echo "Web shell URL:"
+          tmate -S /tmp/tmate.sock display -p '#{tmate_web}'
+          echo ""
+          echo "SSH Terminal Command:"
+          tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'
+          echo "================================================================================"
+          echo "Paste your Runbook Phase commands into the terminal window. Type 'exit' to upload."
+          echo "================================================================================"
+          while [ -S /tmp/tmate.sock ]; do sleep 5; done
 
       # 🟩 THE FIXER
       - name: Securely Upload Compiled APK Artifacts to GitHub Dashboard
