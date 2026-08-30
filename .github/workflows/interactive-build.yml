@@ -1,5 +1,4 @@
-# Version 1.26.0-Production-TrueARMv8Offload-RedisEnabled-r600 (Certified Hardened O2 Build)
-name: Live Interactive Hardware Crypto Build Room for Jio Jidu 6101
+name: Live Interactive Hardware Crypto Build Room (Save First Pass)
 
 on:
   workflow_dispatch:
@@ -36,28 +35,30 @@ jobs:
             sed -i 's|PKG_HASH:=.*|PKG_HASH:=77458a7156e275c0b7b17fabcb357cb12445d95cfcb26fb9bb7d5ecba45e0b63|g' "$MAKEFILE_PATH"
             sed -i 's|PKG_RELEASE:=.*|PKG_RELEASE:=600|g' "$MAKEFILE_PATH"
             
-            # 🔍 TCP FAST OPEN (TFO) LOCK
+            # 🔍 1. WHERE TCP FAST OPEN (TFO) LIVES:
+            # Maps parameters cleanly inside core configuration arguments array including TCP Fast Open, CacheDB, and CFLAGS.
+            # Injects --enable-tfo-client next to server-side anchor to force client/server TFO feature compilation.
             sed -i 's|--enable-tfo-server|--enable-tfo-server --enable-tfo-client --enable-cachedb --with-libhiredis=$(STAGING_DIR)/usr|g' "$MAKEFILE_PATH"
             
-            # 🔍 THE MODULE RECOVERY WATCH
+            # 🔍 THE MODULE RECOVERY WATCH: Explicitly verifies and preserves your exact module compilation sequence
             sed -i 's|subnetcache ipset respip validator iterator|subnetcache ipset respip validator cachedb iterator|g' "$MAKEFILE_PATH"
             
             # Append Redis library dependency mapping tracking hooks
             sed -i 's|\$(call Package/unbound/Default)|\$(call Package/unbound/Default)\n  DEPENDS+= +libhiredis +libmnl|g' "$MAKEFILE_PATH"
             
-            # 🔍 THE SYMBOL STRIPPER
+            # 🔍 THE SYMBOL STRIPPER: Removes allsymbols flag mapping to keep your optimization layouts clean
             sed -i 's|--enable-allsymbols||g' "$MAKEFILE_PATH"
           else
             echo "❌ Error: Unbound Makefile not found!" && exit 1
           fi
 
-      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER (Targeted straight to Jio AX6000 JIDU6101 Profile)
+      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER: Swapped config profiles directly to target Jio JIDU6101
       - name: Pre-Configure Target Profile and Core Feature Modules
         run: |
           cd openwrt
           echo "CONFIG_TARGET_mediatek=y" > .config
           echo "CONFIG_TARGET_mediatek_filogic=y" >> .config
-          echo "CONFIG_TARGET_mediatek_filogic_DEVICE_jiorouter_ax6000-jidu6101=y" >> .config
+          echo "CONFIG_TARGET_mediatek_filogic_DEVICE_jio_jidu6101=y" >> .config
           
           # Force inclusion of all complete package selection matrices explicitly
           echo "CONFIG_PACKAGE_kmod-cryptodev=m" >> .config
@@ -79,7 +80,8 @@ jobs:
           echo "CONFIG_PACKAGE_unbound-anchor=m" >> .config
           echo "CONFIG_PACKAGE_unbound-host=m" >> .config
           
-          # 🔍 THE HARDWARE MODULE LOCKS
+          # 🔍 2. WHERE DNSCRYPT LIVES:
+          # Forces the configuration layer to build the complete DNSCrypt submodule layer straight into Unbound.
           echo "CONFIG_PACKAGE_libunbound_dnscrypt=y" >> .config
           echo "CONFIG_PACKAGE_libunbound_ipset=y" >> .config
           echo "CONFIG_PACKAGE_libunbound_libevent=y" >> .config
@@ -87,40 +89,27 @@ jobs:
           echo "CONFIG_PACKAGE_libunbound_subnet=y" >> .config
           make defconfig
 
-      # 🟩 ANTI-DISCONNECT HEARTBEAT
+      # 🟩 ANTI-DISCONNECT HEARTBEAT: Automatically sends data traffic to stop idle dropouts
       - name: Launch Background Network Keep-Alive
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🟩 NATIVE TMATE SESSION INJECTOR (With Foolproof Connection String Loop)
+      # 🟩 THE PRO OPENER: Pauses the machine right here BEFORE any toolchain compilation happens
       - name: Open Secure Live Interactive Build Connection
-        run: |
-          sudo apt-get update && sudo apt-get install -y tmate openssh-client xz-utils
-          tmate -S /tmp/tmate.sock new-session -d
-          
-          echo "⏳ Waiting for tmate server connection to stabilize..."
-          while [ -z "$(tmate -S /tmp/tmate.sock display -p '#{tmate_web}')" ]; do
-            sleep 2
-          done
-          
-          echo "================================================================================"
-          echo "🚀 NATIVE TMATE SESSION ACTIVE - CLICK OR COPY THE LINKS BELOW:"
-          echo "================================================================================"
-          echo "Web shell URL:"
-          tmate -S /tmp/tmate.sock display -p '#{tmate_web}'
-          echo ""
-          echo "SSH Terminal Command:"
-          tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'
-          echo "================================================================================"
-          echo "Paste your Runbook Phase commands into the terminal window. Type 'exit' to upload."
-          echo "================================================================================"
-          
-          while [ -S /tmp/tmate.sock ]; do sleep 5; done
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: false
 
-      # 🟩 THE FIXER
+      # 🟩 THE FIXER: Collects, stages, and uploads compiled package artifacts when you exit terminal
       - name: Securely Upload Compiled APK Artifacts to GitHub Dashboard
+        if: always()
+        run: |
+          mkdir -p /home/runner/work/final_packages
+          find /home/runner/work/ -name "*.apk" -exec cp -v {} /home/runner/work/final_packages/ \;
+      
+      - name: Publish Artifact Bundle
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: jio-jidu6101-unbound-crypto-packages
-          path: /home/runner/work/final_packages/*.apk
+          name: openwrt-unbound-crypto-packages
+          path: /home/runner/work/final_packages/
