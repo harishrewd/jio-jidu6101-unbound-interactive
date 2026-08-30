@@ -44,14 +44,12 @@ jobs:
             echo "❌ Error: Unbound Makefile not found!" && exit 1
           fi
 
-      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER: Fixed device profile naming convention
+      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER: Configured for Jio JIDU6101
       - name: Pre-Configure Target Profile and Core Feature Modules
         run: |
           cd openwrt
           echo "CONFIG_TARGET_mediatek=y" > .config
           echo "CONFIG_TARGET_mediatek_filogic=y" >> .config
-          
-          # 🔥 FIX: Changed from jio_jidu6101 to the correct OpenWrt internal naming layout
           echo "CONFIG_TARGET_mediatek_filogic_DEVICE_jio_jidu-6101=y" >> .config
           
           echo "CONFIG_PACKAGE_kmod-cryptodev=m" >> .config
@@ -86,11 +84,44 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🟩 THE PRO OPENER: Swapped back to your original working D-Link tmate configuration engine
+      # 🟩 PURE BASH ENTRY ROOM: Uses a live loop to wait for tmate tokens to register completely
       - name: Open Secure Live Interactive Build Connection
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: false
+        run: |
+          sudo apt-get update -y && sudo apt-get install -y tmate
+          rm -f /tmp/done
+          
+          echo "🚀 Initializing interactive build session backend..."
+          tmate -S /tmp/tmate.sock new-session -d
+          
+          echo "⏳ Waiting for terminal engine to grab connection sockets..."
+          while true; do
+            SSH_LINK=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}' 2>/dev/null)
+            WEB_LINK=$(tmate -S /tmp/tmate.sock display -p '#{tmate_web}' 2>/dev/null)
+            
+            # Stop the loop only when both variables have real server text entries
+            if [ ! -z "$SSH_LINK" ] && [ ! -z "$WEB_LINK" ]; then
+              echo "========================================================================"
+              echo "🔥 JIO BUILD ROOM ACTIVE! COPY ONE OF THE LINKS BELOW TO LOG IN: 🔥"
+              echo "========================================================================"
+              echo "🖥️  SSH CONNECTION COMMAND:"
+              echo "$SSH_LINK"
+              echo ""
+              echo "🌐  WEB BROWSER TAB CONNECTION LINK:"
+              echo "$WEB_LINK"
+              echo "========================================================================"
+              echo "👉 CRITICAL REMINDER: Once you complete your compilation inside the terminal,"
+              echo "👉 run this command to save and close the machine: touch /tmp/done"
+              echo "========================================================================"
+              break
+            fi
+            sleep 2
+          done
+          
+          # Keep the main GitHub workflow thread alive until you exit manually
+          while [ ! -f /tmp/done ]; do
+            sleep 5
+          done
+          echo "🏁 Closing session room and starting asset compilation upload pipeline..."
 
       # 🟩 THE FIXER: Collects, stages, and uploads compiled package artifacts when you exit terminal
       - name: Securely Upload Compiled APK Artifacts to GitHub Dashboard
