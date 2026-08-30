@@ -44,7 +44,7 @@ jobs:
             echo "❌ Error: Unbound Makefile not found!" && exit 1
           fi
 
-      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER: Clean configuration injection
+      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER: Configured for Jio JIDU6101
       - name: Pre-Configure Target Profile and Core Feature Modules
         run: |
           cd openwrt
@@ -86,9 +86,11 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🟩 ALTERNATIVE INTERACTIVE OPENER: Bypasses broken tmate servers completely using Upterm networks!
+      # 🟩 ALTERNATIVE INTERACTIVE OPENER: Upterm session with keys disabled
       - name: Open Secure Live Interactive Build Connection
         uses: lhotari/action-upterm@v1
+        with:
+          authorize-public-keys: false
 
       # 🟩 THE FIXER: Collects, stages, and uploads compiled package artifacts when you exit terminal
       - name: Securely Upload Compiled APK Artifacts to GitHub Dashboard
