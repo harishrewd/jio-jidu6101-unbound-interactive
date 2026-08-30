@@ -35,7 +35,7 @@ jobs:
             sed -i 's|PKG_HASH:=.*|PKG_HASH:=77458a7156e275c0b7b17fabcb357cb12445d95cfcb26fb9bb7d5ecba45e0b63|g' "$MAKEFILE_PATH"
             sed -i 's|PKG_RELEASE:=.*|PKG_RELEASE:=600|g' "$MAKEFILE_PATH"
             
-            # 🔍 1. WHERE TCP FAST OPEN (TFO) LIVES:
+            # 🔍 TCP FAST OPEN (TFO) LOCK: Maps parameters cleanly inside core configuration arguments
             sed -i 's|--enable-tfo-server|--enable-tfo-server --enable-tfo-client --enable-cachedb --with-libhiredis=$(STAGING_DIR)/usr|g' "$MAKEFILE_PATH"
             sed -i 's|subnetcache ipset respip validator iterator|subnetcache ipset respip validator cachedb iterator|g' "$MAKEFILE_PATH"
             sed -i 's|\$(call Package/unbound/Default)|\$(call Package/unbound/Default)\n  DEPENDS+= +libhiredis +libmnl|g' "$MAKEFILE_PATH"
@@ -44,41 +44,13 @@ jobs:
             echo "❌ Error: Unbound Makefile not found!" && exit 1
           fi
 
-      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER: Configured for Jio JIDU6101
+      # 🟩 CLEAN PRE-SEED SELECTION LAYER: Sets target architecture without problematic package layers
       - name: Pre-Configure Target Profile and Core Feature Modules
         run: |
           cd openwrt
           echo "CONFIG_TARGET_mediatek=y" > .config
           echo "CONFIG_TARGET_mediatek_filogic=y" >> .config
           echo "CONFIG_TARGET_mediatek_filogic_DEVICE_jio_jidu-6101=y" >> .config
-          
-          echo "CONFIG_PACKAGE_kmod-cryptodev=m" >> .config
-          echo "CONFIG_PACKAGE_libopenssl=m" >> .config
-          echo "CONFIG_PACKAGE_libopenssl-conf=m" >> .config
-          echo "CONFIG_PACKAGE_libopenssl-devcrypto=m" >> .config
-          echo "CONFIG_PACKAGE_libopenssl-engine=m" >> .config
-          echo "CONFIG_PACKAGE_openssl-util=m" >> .config
-          echo "CONFIG_PACKAGE_libmnl=m" >> .config
-          echo "CONFIG_PACKAGE_libsodium=m" >> .config
-          echo "CONFIG_PACKAGE_libhiredis=m" >> .config
-          echo "CONFIG_PACKAGE_libexpat=m" >> .config
-          echo "CONFIG_PACKAGE_libevent2=m" >> .config
-          echo "CONFIG_PACKAGE_libunbound=m" >> .config
-          echo "CONFIG_PACKAGE_unbound-daemon=m" >> .config
-          echo "CONFIG_PACKAGE_unbound-control=m" >> .config
-          echo "CONFIG_PACKAGE_unbound-control-setup=m" >> .config
-          echo "CONFIG_PACKAGE_unbound-checkconf=m" >> .config
-          echo "CONFIG_PACKAGE_unbound-anchor=m" >> .config
-          echo "CONFIG_PACKAGE_unbound-host=m" >> .config
-          
-          # 🔍 2. WHERE DNSCRYPT LIVES:
-          echo "CONFIG_PACKAGE_libunbound_dnscrypt=y" >> .config
-          echo "CONFIG_PACKAGE_libunbound_ipset=y" >> .config
-          echo "CONFIG_PACKAGE_libunbound_libevent=y" >> .config
-          echo "CONFIG_PACKAGE_libunbound_libpthread=y" >> .config
-          echo "CONFIG_PACKAGE_libunbound_subnet=y" >> .config
-          
-          yes "" | make oldconfig
           make defconfig
 
       # 🟩 ANTI-DISCONNECT HEARTBEAT: Automatically sends data traffic to stop idle dropouts
@@ -86,54 +58,11 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🟩 PURE BASH ENTRY ROOM: Swapped out apt packages for direct stable binary downloads
+      # 🟩 THE PRO OPENER: Your original working D-Link tmate layout
       - name: Open Secure Live Interactive Build Connection
-        run: |
-          echo "🔓 Adjusting host login policies for anonymous configuration overrides..."
-          sudo mkdir -p /var/run/sshd
-          echo "root:openwrt" | sudo chpasswd
-          sudo sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
-          sudo sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
-          sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
-          sudo systemctl restart ssh
-          
-          echo "💾 Downloading standalone tunnel binary directly..."
-          wget -q https://equinox.io
-          sudo tar -xzf ngrok-v3-stable-linux-amd64.tgz -C /usr/local/bin/
-          rm -f ngrok-v3-stable-linux-amd64.tgz
-          
-          echo "🌐 Starting backend tunnel routing layers..."
-          ngrok config add-authtoken 2Xf7g9Z1K4mLvNzPqRwS_3y8x9W7V5U3T1S
-          ngrok tcp 22 --log=stdout > /dev/null &
-          
-          sleep 6
-          echo "========================================================================"
-          echo "🔥 JIO BUILD ROOM ACTIVE! COPY THE COMMAND BELOW TO LOG IN: 🔥"
-          echo "========================================================================"
-          TUNNEL_URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
-          
-          # Verification logic patch in case API renders array strings out of order
-          if [ "$TUNNEL_URL" = "null" ] || [ -z "$TUNNEL_URL" ]; then
-            TUNNEL_URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels.public_url')
-          fi
-          
-          CLEAN_URL=$(echo $TUNNEL_URL | sed 's|tcp://||')
-          HOST=$(echo $CLEAN_URL | cut -d':' -f1)
-          PORT=$(echo $CLEAN_URL | cut -d':' -f2)
-          
-          echo "👉 PASTE THIS EXACT CODE STRIP INTO YOUR POWERSHELL:"
-          echo "ssh root@$HOST -p $PORT"
-          echo ""
-          echo "🔐 WHEN IT ASKS FOR PASSWORD, ENTER: openwrt"
-          echo "========================================================================"
-          echo "👉 Run this command inside terminal when done: touch /tmp/done"
-          echo "========================================================================"
-          
-          rm -f /tmp/done
-          while [ ! -f /tmp/done ]; do
-            sleep 5
-          done
-          echo "🏁 Closing session room and starting asset compilation upload pipeline..."
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: false
 
       # 🟩 THE FIXER: Collects, stages, and uploads compiled package artifacts when you exit terminal
       - name: Securely Upload Compiled APK Artifacts to GitHub Dashboard
