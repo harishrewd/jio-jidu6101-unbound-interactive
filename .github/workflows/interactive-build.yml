@@ -36,22 +36,22 @@ jobs:
             sed -i 's|PKG_HASH:=.*|PKG_HASH:=77458a7156e275c0b7b17fabcb357cb12445d95cfcb26fb9bb7d5ecba45e0b63|g' "$MAKEFILE_PATH"
             sed -i 's|PKG_RELEASE:=.*|PKG_RELEASE:=600|g' "$MAKEFILE_PATH"
             
-            # 🔍 TCP FAST OPEN (TFO) LOCK: Maps parameters cleanly inside core configuration arguments array including TCP Fast Open, CacheDB, and CFLAGS
+            # 🔍 TCP FAST OPEN (TFO) LOCK
             sed -i 's|--enable-tfo-server|--enable-tfo-server --enable-tfo-client --enable-cachedb --with-libhiredis=$(STAGING_DIR)/usr|g' "$MAKEFILE_PATH"
             
-            # 🔍 THE MODULE RECOVERY WATCH: Explicitly verifies and preserves your exact module compilation sequence
+            # 🔍 THE MODULE RECOVERY WATCH
             sed -i 's|subnetcache ipset respip validator iterator|subnetcache ipset respip validator cachedb iterator|g' "$MAKEFILE_PATH"
             
             # Append Redis library dependency mapping tracking hooks
             sed -i 's|\$(call Package/unbound/Default)|\$(call Package/unbound/Default)\n  DEPENDS+= +libhiredis +libmnl|g' "$MAKEFILE_PATH"
             
-            # 🔍 THE SYMBOL STRIPPER: Removes allsymbols flag mapping to keep your optimization layouts clean
+            # 🔍 THE SYMBOL STRIPPER
             sed -i 's|--enable-allsymbols||g' "$MAKEFILE_PATH"
           else
             echo "❌ Error: Unbound Makefile not found!" && exit 1
           fi
 
-      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER: Automatically locks all modules on for Jio Jidu 6101 BEFORE opening terminal
+      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER
       - name: Pre-Configure Target Profile and Core Feature Modules
         run: |
           cd openwrt
@@ -79,29 +79,24 @@ jobs:
           echo "CONFIG_PACKAGE_unbound-anchor=m" >> .config
           echo "CONFIG_PACKAGE_unbound-host=m" >> .config
           
-          # 🔍 THE HARDWARE MODULE LOCKS: Force hard-lock injection of all required sub-module expansion features from your old workflow layout
-          echo "CONFIG_PACKAGE_libunbound_dnscrypt=y" >> .config  # ➔ 🔥 DNSCRYPT ACCELERATION LAYER
+          # 🔍 THE HARDWARE MODULE LOCKS
+          echo "CONFIG_PACKAGE_libunbound_dnscrypt=y" >> .config
           echo "CONFIG_PACKAGE_libunbound_ipset=y" >> .config
           echo "CONFIG_PACKAGE_libunbound_libevent=y" >> .config
           echo "CONFIG_PACKAGE_libunbound_libpthread=y" >> .config
-          echo "CONFIG_PACKAGE_libunbound_subnet=y" >> .config   # ➔ 🔥 SUBNETCACHE LAYER
+          echo "CONFIG_PACKAGE_libunbound_subnet=y" >> .config
           make defconfig
 
-      # 🟩 ANTI-DISCONNECT HEARTBEAT: Automatically sends data traffic to stop idle dropouts
-      - name: Launch Background Network Keep-Alive
-        run: |
-          bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
-
-      # 🟩 THE PRO OPENER: Pauses the machine right here BEFORE any toolchain compilation happens
+      # 🟩 THE PRO OPENER (Explicitly bypassed security check blocks)
       - name: Open Secure Live Interactive Build Connection
         uses: mxschmitt/action-tmate@v3
         with:
           limit-access-to-actor: false
 
-      # 🟩 THE FIXER: This step automatically runs the exact second you type 'exit' inside your live terminal
+      # 🟩 THE FIXER
       - name: Securely Upload Compiled APK Artifacts to GitHub Dashboard
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: jio-jidu6101-unbound-crypto-packages
-          path: openwrt/bin/**/*.apk
+          path: /home/runner/work/final_packages/*.apk
