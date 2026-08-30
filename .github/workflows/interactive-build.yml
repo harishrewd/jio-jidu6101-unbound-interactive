@@ -84,15 +84,17 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🟩 PURE BASH ENTRY ROOM: Patched with network initialization delay
+      # 🟩 PURE BASH ENTRY ROOM: Non-blocking background session lock
       - name: Open Secure Live Interactive Build Connection
         run: |
           sudo apt-get update -y && sudo apt-get install -y tmate
-          echo "🚀 Initializing interactive build session backend..."
+          rm -f /tmp/done
+          
+          echo "🚀 Initializing interactive build session background..."
           tmate -S /tmp/tmate.sock new-session -d
           
-          echo "⏳ Waiting 10 seconds for network loops to establish connections cleanly..."
-          sleep 10
+          echo "⏳ Waiting for network loop synchronization..."
+          while ! tmate -S /tmp/tmate.sock wait tmate-ready 2>/dev/null; do sleep 1; done
           
           echo "========================================================================"
           echo "🔥 JIO BUILD ROOM ACTIVE! COPY ONE OF THE LINKS BELOW TO LOG IN: 🔥"
@@ -100,8 +102,15 @@ jobs:
           tmate -S /tmp/tmate.sock display -p '🖥️ SSH TERMINAL LINK: #{tmate_ssh}'
           tmate -S /tmp/tmate.sock display -p '🌐 WEB BROWSER TERMINAL LINK: #{tmate_web}'
           echo "========================================================================"
-          echo "Waiting for you to finish compilation... Type 'exit' inside terminal when done!"
-          tmate -S /tmp/tmate.sock attach
+          echo "👉 CRITICAL REMINDER: Once you complete your compilation inside the terminal,"
+          echo "👉 run this command to save and close the machine: touch /tmp/done"
+          echo "========================================================================"
+          
+          # Maintain background engine looping state securely
+          while [ ! -f /tmp/done ]; do
+            sleep 5
+          done
+          echo "🏁 Closing session room and starting asset compilation upload pipeline..."
 
       # 🟩 THE FIXER: Collects, stages, and uploads compiled package artifacts when you exit terminal
       - name: Securely Upload Compiled APK Artifacts to GitHub Dashboard
