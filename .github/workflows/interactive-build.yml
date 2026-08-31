@@ -17,7 +17,6 @@ jobs:
       - name: Install System Dependencies
         run: |
           sudo apt update
-          # Crucial: Pre-installing tmate right here forces the action to skip its internal installer hang
           sudo apt install -y build-essential clang flex bison g++ gawk gcc-multilib g++-multilib \
             gettext git libncurses5-dev libssl-dev python3-setuptools rsync swig unzip zlib1g-dev \
             file wget zstd libz3-dev libelf-dev quilt tmate
@@ -95,11 +94,23 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🟩 THE PRO OPENER
-      - name: Open Secure Live Interactive Build Connection
-        uses: mxschmitt/action-tmate@v3 # Fixed back to v3
-        with:
-          limit-access-to-actor: false
+      # 🟩 Bypasses the buggy action entirely and opens a bulletproof connection natively
+      - name: Open Direct Native Live Interactive Build Connection
+        run: |
+          tmate -S /tmp/tmate.sock new-session -d
+          tmate -S /tmp/tmate.sock wait-for-穩定 || tmate -S /tmp/tmate.sock wait-for-ready
+          echo "================================================================================"
+          echo "🚀 LIVE TERMINAL CONNECTION IS READY! PASTE ONE OF THESE IN YOUR MACHINE:"
+          echo "================================================================================"
+          tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'
+          tmate -S /tmp/tmate.sock display -p '#{tmate_web}'
+          echo "================================================================================"
+          echo "Keep this GitHub log window open. Type 'exit' in the terminal when finished."
+          
+          # Block the runner process while the tmate session is open
+          while [ -S /tmp/tmate.sock ] && tmate -S /tmp/tmate.sock has-session 2>/dev/null; do
+            sleep 5
+          done
 
       # 🟩 THE FIXER
       - name: Securely Upload Compiled APK Artifacts to GitHub Dashboard
