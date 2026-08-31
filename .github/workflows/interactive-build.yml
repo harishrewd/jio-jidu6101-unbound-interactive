@@ -94,25 +94,25 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active...'; sleep 30; done" &
 
-      # 🟩 Set up active high-speed endpoint tunnel via Pinggy
+      # 🟩 Set up active high-speed endpoint tunnel via Pinggy Fallback URL
       - name: Open Direct Pinggy Secure Live Tunnel Interface
         run: |
           # 1. Setup local target password configuration mapping
           echo "runner:runnerpassword" | sudo chpasswd
           sudo service ssh start
           
-          # 2. Fire up the native pinggy reverse SSH infrastructure tunnel loop
-          # Using an auto-retry command pattern to easily bridge past the free hour token refresh limit
-          ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no -o ServerAliveInterval=10 \
-            -R 443:localhost:22 a.pinggy.io "keepalive" > /tmp/pinggy.log 2>&1 &
+          # 2. Fire up the native pinggy reverse SSH over open SSL Port 443
+          # Fixed: Changed target domain to ran.pinggy.io and port to 443 with tcp+ designation
+          ssh -p 443 -o ConnectTimeout=5 -o StrictHostKeyChecking=no -o ServerAliveInterval=10 \
+            -R 443:localhost:22 tcp+keepalive@ran.pinggy.io > /tmp/pinggy.log 2>&1 &
           
           sleep 5
           
           # 3. Extract the active URL endpoints cleanly to the logs panel
           echo "================================================================================"
-          echo "🚀 LIVE SECURE CONNECT PORT OPENED INSTANTLY VIA PINGGY!"
+          echo "🚀 LIVE SECURE CONNECT PORT OPENED INSTANTLY VIA PINGGY fallback!"
           echo "================================================================================"
-          cat /tmp/pinggy.log | grep -i "ssh" || cat /tmp/pinggy.log
+          cat /tmp/pinggy.log
           echo "================================================================================"
           echo "Password for user 'runner' is: runnerpassword"
           echo "Type 'touch /tmp/stop_build' inside your connected terminal to complete the build run."
