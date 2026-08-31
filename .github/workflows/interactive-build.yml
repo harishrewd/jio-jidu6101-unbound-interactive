@@ -102,15 +102,15 @@ jobs:
           sudo service ssh start
           
           # 2. Fire up the native pinggy reverse SSH over open SSL Port 443
-          # Fixed: Changed target domain to ran.pinggy.io and port to 443 with tcp+ designation
-          ssh -p 443 -o ConnectTimeout=5 -o StrictHostKeyChecking=no -o ServerAliveInterval=10 \
-            -R 443:localhost:22 tcp+keepalive@ran.pinggy.io > /tmp/pinggy.log 2>&1 &
+          # Fixed: Re-routed target to verified global host a.pinggy.io on fallback port 443 with forced terminal allocation (-tt)
+          ssh -p 443 -tt -o ConnectTimeout=5 -o StrictHostKeyChecking=no -o ServerAliveInterval=10 \
+            -R 443:localhost:22 tcp+keepalive@a.pinggy.io "keepalive" > /tmp/pinggy.log 2>&1 &
           
           sleep 5
           
           # 3. Extract the active URL endpoints cleanly to the logs panel
           echo "================================================================================"
-          echo "🚀 LIVE SECURE CONNECT PORT OPENED INSTANTLY VIA PINGGY fallback!"
+          echo "🚀 LIVE SECURE CONNECT PORT OPENED INSTANTLY VIA PINGGY 443 FALLBACK!"
           echo "================================================================================"
           cat /tmp/pinggy.log
           echo "================================================================================"
