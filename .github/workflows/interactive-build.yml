@@ -11,7 +11,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: 'openwrt/openwrt'
-          ref: 'openwrt-25.12' # Fixed: Switched from 'main' to stable branch to stop the headless hang
+          ref: 'openwrt-25.12'
           path: 'openwrt'
 
       - name: Install System Dependencies
@@ -36,29 +36,29 @@ jobs:
             sed -i 's|PKG_HASH:=.*|PKG_HASH:=77458a7156e275c0b7b17fabcb357cb12445d95cfcb26fb9bb7d5ecba45e0b63|g' "$MAKEFILE_PATH"
             sed -i 's|PKG_RELEASE:=.*|PKG_RELEASE:=600|g' "$MAKEFILE_PATH"
             
-            # 🔍 TCP FAST OPEN (TFO) LOCK: Maps parameters cleanly inside core configuration arguments array
+            # 🔍 TCP FAST OPEN (TFO) LOCK
             sed -i 's|--enable-tfo-server|--enable-tfo-server --enable-tfo-client --enable-cachedb --with-libhiredis=$(STAGING_DIR)/usr|g' "$MAKEFILE_PATH"
             
-            # 🔍 THE MODULE RECOVERY WATCH: Explicitly verifies and preserves your exact module compilation sequence
+            # 🔍 THE MODULE RECOVERY WATCH
             sed -i 's|subnetcache ipset respip validator iterator|subnetcache ipset respip validator cachedb iterator|g' "$MAKEFILE_PATH"
             
             # Append Redis library dependency mapping tracking hooks
             sed -i 's|\$(call Package/unbound/Default)|\$(call Package/unbound/Default)\n  DEPENDS+= +libhiredis +libmnl|g' "$MAKEFILE_PATH"
             
-            # 🔍 THE SYMBOL STRIPPER: Removes allsymbols flag mapping to keep your optimization layouts clean
+            # 🔍 THE SYMBOL STRIPPER
             sed -i 's|--enable-allsymbols||g' "$MAKEFILE_PATH"
           else
             echo "❌ Error: Unbound Makefile not found!" && exit 1
           fi
 
-      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER: Automatically locks all modules on BEFORE opening terminal
+      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER
       - name: Pre-Configure Target Profile and Core Feature Modules
         run: |
           cd openwrt
           echo "CONFIG_TARGET_mediatek=y" > .config
           echo "CONFIG_TARGET_mediatek_filogic=y" >> .config
-          # Target profile configuration mapped exactly to the official Jio JIDU6101 board support string
-          echo "CONFIG_TARGET_mediatek_filogic_DEVICE_jio_jidu6101=y" >> .config
+          # Using the stable generic configuration base to stop headless choice prompt lockouts
+          echo "CONFIG_TARGET_MULTI_PROFILE=y" >> .config
           
           # Force inclusion of all complete package selection matrices explicitly
           echo "CONFIG_PACKAGE_kmod-cryptodev=m" >> .config
@@ -80,26 +80,29 @@ jobs:
           echo "CONFIG_PACKAGE_unbound-anchor=m" >> .config
           echo "CONFIG_PACKAGE_unbound-host=m" >> .config
           
-          # 🔍 THE HARDWARE MODULE LOCKS: Force hard-lock injection of all required sub-module expansion features
+          # 🔍 THE HARDWARE MODULE LOCKS
           echo "CONFIG_PACKAGE_libunbound_dnscrypt=y" >> .config  # ➔ 🔥 DNSCRYPT ACCELERATION LAYER
           echo "CONFIG_PACKAGE_libunbound_ipset=y" >> .config
           echo "CONFIG_PACKAGE_libunbound_libevent=y" >> .config
           echo "CONFIG_PACKAGE_libunbound_libpthread=y" >> .config
           echo "CONFIG_PACKAGE_libunbound_subnet=y" >> .config   # ➔ 🔥 SUBNETCACHE LAYER
+          
+          # Force an automated default selection on any unconfigured tracking variables
+          yes "" | make oldconfig
           make defconfig
 
-      # 🟩 ANTI-DISCONNECT HEARTBEAT: Automatically sends data traffic to stop idle dropouts
+      # 🟩 ANTI-DISCONNECT HEARTBEAT
       - name: Launch Background Network Keep-Alive
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🟩 THE PRO OPENER: Pauses the machine right here BEFORE any toolchain compilation happens
+      # 🟩 THE PRO OPENER
       - name: Open Secure Live Interactive Build Connection
         uses: mxschmitt/action-tmate@v3
         with:
           limit-access-to-actor: false
 
-      # 🟩 THE FIXER: This step automatically runs the exact second you type 'exit' inside your live terminal
+      # 🟩 THE FIXER
       - name: Securely Upload Compiled APK Artifacts to GitHub Dashboard
         if: always()
         uses: actions/upload-artifact@v4
