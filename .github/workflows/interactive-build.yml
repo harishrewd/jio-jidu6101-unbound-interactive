@@ -94,11 +94,16 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🟩 Bypasses the buggy action entirely and opens a bulletproof connection natively
+      # 🟩 Native session handler loop
       - name: Open Direct Native Live Interactive Build Connection
         run: |
           tmate -S /tmp/tmate.sock new-session -d
-          tmate -S /tmp/tmate.sock wait-for-穩定 || tmate -S /tmp/tmate.sock wait-for-ready
+          
+          echo "⌛ Waiting for connection keys to generate..."
+          until tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}' 2>/dev/null | grep -q "ssh"; do
+            sleep 2
+          done
+          
           echo "================================================================================"
           echo "🚀 LIVE TERMINAL CONNECTION IS READY! PASTE ONE OF THESE IN YOUR MACHINE:"
           echo "================================================================================"
@@ -107,7 +112,6 @@ jobs:
           echo "================================================================================"
           echo "Keep this GitHub log window open. Type 'exit' in the terminal when finished."
           
-          # Block the runner process while the tmate session is open
           while [ -S /tmp/tmate.sock ] && tmate -S /tmp/tmate.sock has-session 2>/dev/null; do
             sleep 5
           done
