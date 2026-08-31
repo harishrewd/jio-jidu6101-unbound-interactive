@@ -46,18 +46,45 @@ jobs:
             echo "❌ Error: Unbound Makefile not found!" && exit 1
           fi
 
-      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER: Sets target architecture
+      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER: Complete original user matrix injection
       - name: Pre-Configure Target Profile and Core Feature Modules
         run: |
           cd openwrt
           echo "CONFIG_TARGET_mediatek=y" > .config
           echo "CONFIG_TARGET_mediatek_filogic=y" >> .config
           echo "CONFIG_TARGET_mediatek_filogic_DEVICE_jio_jidu-6101=y" >> .config
+          
+          # Force inclusion of all package selection matrices explicitly as shared modules
+          echo "CONFIG_PACKAGE_kmod-cryptodev=m" >> .config
+          echo "CONFIG_PACKAGE_libopenssl=m" >> .config
+          echo "CONFIG_PACKAGE_libopenssl-conf=m" >> .config
+          echo "CONFIG_PACKAGE_libopenssl-devcrypto=m" >> .config
+          echo "CONFIG_PACKAGE_libopenssl-engine=m" >> .config
+          echo "CONFIG_PACKAGE_openssl-util=m" >> .config
+          echo "CONFIG_PACKAGE_libmnl=m" >> .config
+          echo "CONFIG_PACKAGE_libsodium=m" >> .config
+          echo "CONFIG_PACKAGE_libhiredis=m" >> .config
+          echo "CONFIG_PACKAGE_libexpat=m" >> .config
+          echo "CONFIG_PACKAGE_libevent2=m" >> .config
+          echo "CONFIG_PACKAGE_libunbound=m" >> .config
+          echo "CONFIG_PACKAGE_unbound-daemon=m" >> .config
+          echo "CONFIG_PACKAGE_unbound-control=m" >> .config
+          echo "CONFIG_PACKAGE_unbound-control-setup=m" >> .config
+          echo "CONFIG_PACKAGE_unbound-checkconf=m" >> .config
+          echo "CONFIG_PACKAGE_unbound-anchor=m" >> .config
+          echo "CONFIG_PACKAGE_unbound-host=m" >> .config
+          
+          # Hardware Feature Overrides
+          echo "CONFIG_PACKAGE_libunbound_dnscrypt=y" >> .config
+          echo "CONFIG_PACKAGE_libunbound_ipset=y" >> .config
+          echo "CONFIG_PACKAGE_libunbound_libevent=y" >> .config
+          echo "CONFIG_PACKAGE_libunbound_libpthread=y" >> .config
+          echo "CONFIG_PACKAGE_libunbound_subnet=y" >> .config
+          
           yes "" | make oldconfig
           make defconfig
 
       # ⚡ AUTOMATED BACKGROUND COMPILATION LAYER
-      # This compiles the heavy host tools automatically BEFORE your terminal session opens!
       - name: Pre-Compile Host Tools & Cross-Compiler Toolchain
         run: |
           cd openwrt
@@ -72,7 +99,7 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active...'; sleep 30; done" &
 
-      # 🟩 PURE BASH ENTRY ROOM: Instantly pops open with tools pre-baked
+      # 🟩 PURE BASH ENTRY ROOM
       - name: Open Secure Live Interactive Build Connection
         run: |
           echo "🔓 Adjusting host login policies for anonymous configuration overrides..."
@@ -105,12 +132,13 @@ jobs:
           done
           echo "🏁 Closing session room and starting asset compilation upload pipeline..."
 
-      # 🟩 THE FIXER: Collects, stages, and uploads compiled package artifacts when you exit terminal
+      # 🟩 THE FIXER: Collects, stages, and uploads compiled package artifacts cleanly
       - name: Securely Upload Compiled APK Artifacts to GitHub Dashboard
         if: always()
         run: |
           mkdir -p /home/runner/work/final_packages
-          find /home/runner/work/ -name "*.apk" -exec cp -v {} /home/runner/work/final_packages/ \;
+          # Scans target compilation path strictly to bypass permission-locked systems
+          find /home/runner/work/jio-jidu6101-unbound-interactive/jio-jidu6101-unbound-interactive/openwrt/bin/packages/ -name "*.apk" -exec cp -v {} /home/runner/work/final_packages/ \;
       
       - name: Publish Artifact Bundle
         if: always()
