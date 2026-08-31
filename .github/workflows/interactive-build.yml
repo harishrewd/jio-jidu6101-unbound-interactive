@@ -97,7 +97,7 @@ jobs:
 
       # 🟩 THE PRO OPENER
       - name: Open Secure Live Interactive Build Connection
-        uses: mxschmitt/action-tmate@v3.18.0
+        uses: mxschmitt/action-tmate@v3 # Fixed back to v3
         with:
           limit-access-to-actor: false
 
