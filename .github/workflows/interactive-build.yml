@@ -37,7 +37,7 @@ jobs:
             sed -i 's|PKG_HASH:=.*|PKG_HASH:=77458a7156e275c0b7b17fabcb357cb12445d95cfcb26fb9bb7d5ecba45e0b63|g' "$MAKEFILE_PATH"
             sed -i 's|PKG_RELEASE:=.*|PKG_RELEASE:=600|g' "$MAKEFILE_PATH"
             
-            # 🔍 TCP FAST OPEN (TFO) LOCK: Maps parameters cleanly inside core configuration arguments
+            # 🔍 TCP FAST OPEN (TFO) LOCK
             sed -i 's|--enable-tfo-server|--enable-tfo-server --enable-tfo-client --enable-cachedb --with-libhiredis=$(STAGING_DIR)/usr|g' "$MAKEFILE_PATH"
             sed -i 's|subnetcache ipset respip validator iterator|subnetcache ipset respip validator cachedb iterator|g' "$MAKEFILE_PATH"
             sed -i 's|\$(call Package/unbound/Default)|\$(call Package/unbound/Default)\n  DEPENDS+= +libhiredis +libmnl|g' "$MAKEFILE_PATH"
@@ -52,19 +52,27 @@ jobs:
           cd openwrt
           echo "CONFIG_TARGET_mediatek=y" > .config
           echo "CONFIG_TARGET_mediatek_filogic=y" >> .config
-          # Target profile configuration mapped exactly to the official Jio JIDU6101 board support string
           echo "CONFIG_TARGET_mediatek_filogic_DEVICE_jio_jidu-6101=y" >> .config
-          
-          # Force an automated default selection on any unconfigured snapshot entries
           yes "" | make oldconfig
           make defconfig
 
-      # 🟩 ANTI-DISCONNECT HEARTBEAT: Automatically sends data traffic to stop idle dropouts
+      # ⚡ AUTOMATED BACKGROUND COMPILATION LAYER
+      # This compiles the heavy host tools automatically BEFORE your terminal session opens!
+      - name: Pre-Compile Host Tools & Cross-Compiler Toolchain
+        run: |
+          cd openwrt
+          export FORCE_UNSAFE_CONFIGURE=1
+          echo "🚀 Compiling Tools (Background Phase)..."
+          make tools/install -j$(nproc)
+          echo "🚀 Compiling Toolchain (Background Phase)..."
+          make toolchain/install -j$(nproc)
+
+      # 🟩 ANTI-DISCONNECT HEARTBEAT
       - name: Launch Background Network Keep-Alive
         run: |
-          bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
+          bash -c "while true; do echo 'Heartbeat active...'; sleep 30; done" &
 
-      # 🟩 PURE BASH ENTRY ROOM: Error-free public tunnel mapping with no tokens required
+      # 🟩 PURE BASH ENTRY ROOM: Instantly pops open with tools pre-baked
       - name: Open Secure Live Interactive Build Connection
         run: |
           echo "🔓 Adjusting host login policies for anonymous configuration overrides..."
@@ -76,8 +84,6 @@ jobs:
           sudo systemctl restart ssh
           
           echo "🌐 Launching Pinggy Reverse TCP Proxy Connection Layer..."
-          # 🔥 FIX: Changed user parameter tag string directly to 'tcp+pass' to instruct the proxy engine 
-          # to ignore idle session timeouts and bypass firewall token barriers natively
           ssh -p 443 -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ServerAliveInterval=15 \
             -R 443:localhost:22 tcp+pass@a.pinggy.io > /tmp/pinggy.log 2>&1 &
           
@@ -87,20 +93,10 @@ jobs:
           echo "========================================================================"
           echo "🔥 JIO BUILD ROOM ACTIVE! COPY THE COMMAND BELOW TO LOG IN: 🔥"
           echo "========================================================================"
-          # Extracts the generated terminal login text block cleanly
-          RAW_CMD=$(grep -oE "ssh -p [0-9]+ root@.[a-zA-Z0-9.]+" /tmp/pinggy.log | head -n 1)
-          
-          if [ -z "$RAW_CMD" ]; then
-            echo "⚠️ Buffering log check... Content of connection dump:"
-            cat /tmp/pinggy.log
-          else
-            echo "👉 PASTE THIS EXACT CODE STRIP INTO YOUR POWERSHELL:"
-            echo "$RAW_CMD"
-            echo ""
-            echo "🔐 WHEN IT ASKS FOR PASSWORD, ENTER: openwrt"
-          fi
+          cat /tmp/pinggy.log
           echo "========================================================================"
-          echo "👉 Run this command inside terminal when done: touch /tmp/done"
+          echo "Password for user 'root' is: openwrt"
+          echo "Type 'touch /tmp/done' inside your connected terminal to complete the build run."
           echo "========================================================================"
           
           rm -f /tmp/done
