@@ -19,7 +19,7 @@ jobs:
           sudo apt update
           sudo apt install -y build-essential clang flex bison g++ gawk gcc-multilib g++-multilib \
             gettext git libncurses5-dev libssl-dev python3-setuptools rsync swig unzip zlib1g-dev \
-            file wget zstd libz3-dev libelf-dev quilt tmate
+            file wget zstd libz3-dev libelf-dev quilt tmate openssh-client
 
       - name: Set Up Package Feeds
         run: |
@@ -94,9 +94,13 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🟩 Native session handler loop
+      # 🟩 Native session handler loop with automatic keygen seeding
       - name: Open Direct Native Live Interactive Build Connection
         run: |
+          # Crucial: Generate the runner's SSH identity keys so tmate can connect immediately
+          mkdir -p ~/.ssh
+          ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
+          
           tmate -S /tmp/tmate.sock new-session -d
           
           echo "⌛ Waiting for connection keys to generate..."
