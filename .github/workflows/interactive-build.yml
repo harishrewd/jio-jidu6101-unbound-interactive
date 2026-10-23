@@ -35,12 +35,14 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🟩 THE SOLID PRO OPENER: Starts a native tmate session background loop and prints the uncut connection links
+      # 🟩 THE SOLID PRO OPENER: Starts a native tmate session background loop securely without relying on strict command keywords
       - name: Open Secure Live Interactive Build Connection via Native Tmate
         run: |
           echo "🚀 Initializing native standalone tmate shell environment..."
           tmate -S /tmp/tmate.sock new-session -d
-          tmate -S /tmp/tmate.sock wait_for_session
+          
+          # Clean bash wait-loop to ensure the sockets generate properly
+          sleep 5
           
           echo "========================================================================"
           echo "🔥 JIO 6701 NATIVE BUILD ROOM ACTIVE! 🔥"
