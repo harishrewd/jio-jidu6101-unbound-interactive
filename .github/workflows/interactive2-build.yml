@@ -1,0 +1,156 @@
+# Version 1.26.2-Interactive-TrueARMv8Offload-RedisEnabled-r600 (Certified Hardened O2 Build)
+name: Live Interactive Hardware Crypto Build Room for Jio Jidu 6701
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout OpenWrt Core Code
+        uses: actions/checkout@v4
+        with:
+          repository: 'openwrt/openwrt'
+          ref: 'v25.12.6' # Matched explicitly to your target drop-down version tag
+          path: 'openwrt'
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential clang flex bison g++ gawk gcc-multilib g++-multilib \
+            gettext git libncurses5-dev libssl-dev python3-setuptools rsync swig unzip zlib1g-dev \
+            file wget zstd libz3-dev libelf-dev quilt openssh-server
+
+      - name: Set Up Package Feeds
+        run: |
+          cd openwrt
+          ./scripts/feeds update -a
+          ./scripts/feeds install libsodium hiredis expat libmnl libevent
+          ./scripts/feeds install unbound-daemon libunbound unbound-control unbound-checkconf unbound-anchor unbound-host
+
+      - name: Hard-Coded Tweak of Unbound Suite Version and Engine Manifest
+        run: |
+          MAKEFILE_PATH="openwrt/feeds/packages/net/unbound/Makefile"
+          if [ -f "$MAKEFILE_PATH" ]; then
+            echo "⚙️ Configuring version parameters inside Unbound package manifest..."
+            
+            # Version & Security Lock Configuration (Updated to 1.26.2)
+            sed -i 's|PKG_VERSION:=.*|PKG_VERSION:=1.26.2|g' "$MAKEFILE_PATH"
+            sed -i 's|PKG_HASH:=.*|PKG_HASH:=d8ee7aa6bbb3ff1be7d9e57637d0d0ec2f18273a8efff1a0afe2c665858b96f7|g' "$MAKEFILE_PATH"
+            sed -i 's|PKG_RELEASE:=.*|PKG_RELEASE:=600|g' "$MAKEFILE_PATH"
+            
+            # Force download directly from the true NLnet Labs software directory path to bypass 404 mirror errors
+            sed -i 's|PKG_SOURCE_URL:=.*|PKG_SOURCE_URL:=https://nlnetlabs.nl/downloads/unbound/|g' "$MAKEFILE_PATH"
+            
+            # 🔍 TCP FAST OPEN (TFO) LOCK
+            sed -i 's|--enable-tfo-server|--enable-tfo-server --enable-tfo-client --enable-cachedb --with-libhiredis=$(STAGING_DIR)/usr|g' "$MAKEFILE_PATH"
+            sed -i 's|subnetcache ipset respip validator iterator|subnetcache ipset respip validator cachedb iterator|g' "$MAKEFILE_PATH"
+            sed -i 's|\$(call Package/unbound/Default)|\$(call Package/unbound/Default)\n  DEPENDS+= +libhiredis +libmnl|g' "$MAKEFILE_PATH"
+            sed -i 's|--enable-allsymbols||g' "$MAKEFILE_PATH"
+          else
+            echo "❌ Error: Unbound Makefile not found!" && exit 1
+          fi
+
+      # 🟩 AUTOMATED PRE-SEED SELECTION LAYER: Configured for the JIDU6701 hardware engine
+      - name: Pre-Configure Target Profile and Core Feature Modules
+        run: |
+          cd openwrt
+          echo "CONFIG_TARGET_mediatek=y" > .config
+          echo "CONFIG_TARGET_mediatek_filogic=y" >> .config
+          echo "CONFIG_TARGET_mediatek_filogic_DEVICE_jiorouter_ax6000-jidu6701=y" >> .config
+          
+          # Force inclusion of all package selection matrices explicitly as shared modules
+          echo "CONFIG_PACKAGE_kmod-cryptodev=m" >> .config
+          echo "CONFIG_PACKAGE_libopenssl=m" >> .config
+          echo "CONFIG_PACKAGE_libopenssl-conf=m" >> .config
+          echo "CONFIG_PACKAGE_libopenssl-devcrypto=m" >> .config
+          echo "CONFIG_PACKAGE_libopenssl-engine=m" >> .config
+          echo "CONFIG_PACKAGE_openssl-util=m" >> .config
+          echo "CONFIG_PACKAGE_libmnl=m" >> .config
+          echo "CONFIG_PACKAGE_libsodium=m" >> .config
+          echo "CONFIG_PACKAGE_libhiredis=m" >> .config
+          echo "CONFIG_PACKAGE_libexpat=m" >> .config
+          echo "CONFIG_PACKAGE_libevent2=m" >> .config
+          echo "CONFIG_PACKAGE_libunbound=m" >> .config
+          echo "CONFIG_PACKAGE_unbound-daemon=m" >> .config
+          echo "CONFIG_PACKAGE_unbound-control=m" >> .config
+          echo "CONFIG_PACKAGE_unbound-control-setup=m" >> .config
+          echo "CONFIG_PACKAGE_unbound-checkconf=m" >> .config
+          echo "CONFIG_PACKAGE_unbound-anchor=m" >> .config
+          echo "CONFIG_PACKAGE_unbound-host=m" >> .config
+          
+          # Hardware Feature Overrides
+          echo "CONFIG_PACKAGE_libunbound_dnscrypt=y" >> .config
+          echo "CONFIG_PACKAGE_libunbound_ipset=y" >> .config
+          echo "CONFIG_PACKAGE_libunbound_libevent=y" >> .config
+          echo "CONFIG_PACKAGE_libunbound_libpthread=y" >> .config
+          echo "CONFIG_PACKAGE_libunbound_subnet=y" >> .config
+          
+          yes "" | make oldconfig
+          make defconfig
+
+      # ⚡ AUTOMATED BACKGROUND COMPILATION LAYER
+      - name: Pre-Compile Host Tools & Cross-Compiler Toolchain
+        run: |
+          cd openwrt
+          export FORCE_UNSAFE_CONFIGURE=1
+          echo "🚀 Compiling Tools (Background Phase)..."
+          make tools/install -j$(nproc)
+          echo "🚀 Compiling Toolchain (Background Phase)..."
+          make toolchain/install -j$(nproc)
+
+      # 🟩 ANTI-DISCONNECT HEARTBEAT
+      - name: Launch Background Network Keep-Alive
+        run: |
+          bash -c "while true; do echo 'Heartbeat active...'; sleep 30; done" &
+
+      # 🟩 PURE BASH ENTRY ROOM
+      - name: Open Secure Live Interactive Build Connection
+        run: |
+          echo "🔓 Adjusting host login policies for anonymous configuration overrides..."
+          sudo mkdir -p /var/run/sshd
+          echo "root:openwrt" | sudo chpasswd
+          sudo sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+          sudo sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          sudo systemctl restart ssh
+          
+          echo "🌐 Launching Pinggy Reverse TCP Proxy Connection Layer..."
+          ssh -p 443 -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ServerAliveInterval=15 \
+            -R 443:localhost:22 tcp+pass@a.pinggy.io > /tmp/pinggy.log 2>&1 &
+          
+          echo "⏳ Syncing server ports..."
+          sleep 8
+          
+          echo "========================================================================"
+          echo "🔥 JIO 6701 INTERACTIVE BUILD ROOM ACTIVE! COPY THE LOG-IN COMMAND: 🔥"
+          echo "========================================================================"
+          cat /tmp/pinggy.log
+          echo "========================================================================"
+          echo "Password for user 'root' is: openwrt"
+          echo "Type 'touch /tmp/done' inside your connected terminal to complete the build run."
+          echo "========================================================================"
+          
+          rm -f /tmp/done
+          while [ ! -f /tmp/done ]; do
+            sleep 5
+          done
+          echo "🏁 Closing session room and starting asset compilation upload pipeline..."
+
+      # 🟩 THE FIXER: Dynamically finds and copies package files
+      - name: Securely Stage Compiled APK Artifacts
+        if: always()
+        run: |
+          STAGING_DIR="${{ github.workspace }}/final_packages"
+          mkdir -p "$STAGING_DIR"
+          
+          echo "Scanning workspace path for generated packages..."
+          find "${{ github.workspace }}/openwrt/bin/" -name "*.apk" -exec cp -v {} "$STAGING_DIR/" \; || true
+      
+      - name: Publish Artifact Bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jio-jidu6701-unbound-interactive-apk
+          path: ${{ github.workspace }}/final_packages/
