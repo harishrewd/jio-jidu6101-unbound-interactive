@@ -30,7 +30,7 @@ jobs:
           ./scripts/feeds install libsodium hiredis expat libmnl libevent
           ./scripts/feeds install unbound-daemon libunbound unbound-control unbound-checkconf unbound-anchor unbound-host
 
-      - name: Hard-Coded Injection of True ARMv8 Hardware Assembly Flags into Unbound
+      - name: Hard-Coded Injection of True ARMv8 Hardware Assembly Flags into Unbound and Hiredis
         run: |
           MAKEFILE_PATH="openwrt/feeds/packages/net/unbound/Makefile"
           if [ -f "$MAKEFILE_PATH" ]; then
@@ -45,6 +45,15 @@ jobs:
             sed -i 's|\$(call Package/unbound/Default)|\$(call Package/unbound/Default)\n  DEPENDS+= +libhiredis +libmnl|g' "$MAKEFILE_PATH"
             sed -i 's|--enable-allsymbols||g' "$MAKEFILE_PATH"
             sed -i '/include \$(INCLUDE_DIR)\/package\.mk/i TARGET_CFLAGS:=\$(filter-out -Os, \$(TARGET_CFLAGS)) -O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53\nEXTRA_CFLAGS:=\$(filter-out -Os, \$(EXTRA_CFLAGS)) -O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53' "$MAKEFILE_PATH"
+          fi
+
+          # 🌟 NEW UPSTREAM TARGET LOCK FOR LIBHIREDIS 1.4.1
+          HIREDIS_PATH="openwrt/feeds/packages/libs/hiredis/Makefile"
+          if [ -f "$HIREDIS_PATH" ]; then
+            echo "⚙️ Forcing libhiredis up to target version 1.4.1..."
+            sed -i 's|PKG_VERSION:=.*|PKG_VERSION:=1.4.1|g' "$HIREDIS_PATH"
+            sed -i 's|PKG_RELEASE:=.*|PKG_RELEASE:=1|g' "$HIREDIS_PATH"
+            sed -i 's|PKG_HASH:=.*|PKG_HASH:=60c58e8b6b0c25a0715975e533c3a502f6af00936774a3f3b90df331006579f1|g' "$HIREDIS_PATH"
           fi
 
       # 💾 RUNTIME COMPILER ENGINE SPEED STORAGE
@@ -71,6 +80,7 @@ jobs:
           # [AUTOMATED PRE-SELECTIONS]
           echo "CONFIG_PACKAGE_libopenssl=y" >> .config
           echo "CONFIG_PACKAGE_libopenssl-conf=y" >> .config
+          echo "CONFIG_PACKAGE_openssl-util=y" >> .config
           echo "CONFIG_OPENSSL_WITH_ASM=y" >> .config
           echo "CONFIG_OPENSSL_ENGINE=y" >> .config
           echo "CONFIG_OPENSSL_OPTIMIZE_SPEED=y" >> .config
@@ -85,6 +95,7 @@ jobs:
           echo "CONFIG_PACKAGE_libunbound=y" >> .config
           echo "CONFIG_PACKAGE_unbound-daemon=y" >> .config
           echo "CONFIG_PACKAGE_unbound-control=y" >> .config
+          echo "CONFIG_PACKAGE_unbound-control-setup=y" >> .config
           echo "CONFIG_PACKAGE_unbound-checkconf=y" >> .config
           echo "CONFIG_PACKAGE_unbound-anchor=y" >> .config
           echo "CONFIG_PACKAGE_unbound-host=y" >> .config
@@ -101,7 +112,7 @@ jobs:
           yes "" | make oldconfig
           make defconfig
 
-      # 🟩 THE STRATEGY FIX: COMPILING HOST TOOLS AUTOMATICALLY IN GITHUB (Takes ~30 mins here)
+      # 🟩 AUTOMATED COMPILATION OF HOST TOOLS TO SAVE INTERACTIVE TUNNEL TIME
       - name: Automated Tools Foreground Pre-Build
         run: |
           cd openwrt
@@ -114,7 +125,7 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active...'; sleep 30; done" &
 
-      # 🌐 DIRECT LINEAR INTERACTIVE GATEWAY (Pinggy Tunnel Opening After Tools are Done)
+      # 🌐 DIRECT LINEAR INTERACTIVE GATEWAY (Pinggy Tunnel)
       - name: Open Secure Live Interactive Build Connection
         run: |
           echo "🔓 Adjusting host login policies for anonymous configuration overrides..."
@@ -147,7 +158,7 @@ jobs:
           done
           echo "🏁 Closing session room and starting asset compilation upload pipeline..."
 
-      # 📦 HARVEST ARCHIVE STAGE
+      # 📦 HARVEST ARCHIVE STAGE (Using your exact preferred wildcard formatting)
       - name: Upload All Finished APK Files
         uses: actions/upload-artifact@v4
         if: always()
