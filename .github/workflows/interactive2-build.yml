@@ -30,11 +30,12 @@ jobs:
           ./scripts/feeds install libsodium hiredis expat libmnl libevent
           ./scripts/feeds install unbound-daemon libunbound unbound-control unbound-checkconf unbound-anchor unbound-host
 
-      - name: Hard-Coded Injection of True ARMv8 Hardware Assembly Flags into Unbound and Hiredis
+      - name: Hard-Coded Injection of True ARMv8 Hardware Flags, Fixed Downloads, and Patches
         run: |
+          # 1. FIX UNBOUND CONFIGURATION MANIFEST AND DOWNLOAD PATHS
           MAKEFILE_PATH="openwrt/feeds/packages/net/unbound/Makefile"
           if [ -f "$MAKEFILE_PATH" ]; then
-            echo "⚙️ Tweaking specific package configuration parameter block..."
+            echo "⚙️ Patching Unbound parameters..."
             sed -i 's|PKG_VERSION:=.*|PKG_VERSION:=1.26.2|g' "$MAKEFILE_PATH"
             sed -i 's|PKG_HASH:=.*|PKG_HASH:=d8ee7aa6bbb3ff1be7d9e57637d0d0ec2f18273a8efff1a0afe2c665858b96f7|g' "$MAKEFILE_PATH"
             sed -i 's|PKG_SOURCE_URL:=.*|PKG_SOURCE_URL:=https://nlnetlabs.nl|g' "$MAKEFILE_PATH"
@@ -47,16 +48,22 @@ jobs:
             sed -i '/include \$(INCLUDE_DIR)\/package\.mk/i TARGET_CFLAGS:=\$(filter-out -Os, \$(TARGET_CFLAGS)) -O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53\nEXTRA_CFLAGS:=\$(filter-out -Os, \$(EXTRA_CFLAGS)) -O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53' "$MAKEFILE_PATH"
           fi
 
-          # 🌟 UPSTREAM VERSION UPGRADE AND SOURCE HASH SYNC FOR LIBHIREDIS 1.4.1
+          # 2. FIX LIBHIREDIS 1.4.1 DIRECT RELEASE DOWNLOAD MIRROR
           HIREDIS_PATH="openwrt/feeds/packages/libs/hiredis/Makefile"
           if [ -f "$HIREDIS_PATH" ]; then
-            echo "⚙️ Forcing libhiredis up to target version 1.4.1..."
+            echo "⚙️ Forcing libhiredis version 1.4.1 and injecting direct release mirror..."
             sed -i 's|PKG_VERSION:=.*|PKG_VERSION:=1.4.1|g' "$HIREDIS_PATH"
             sed -i 's|PKG_RELEASE:=.*|PKG_RELEASE:=1|g' "$HIREDIS_PATH"
             sed -i 's|PKG_HASH:=.*|PKG_HASH:=60c58e8b6b0c25a0715975e533c3a502f6af00936774a3f3b90df331006579f1|g' "$HIREDIS_PATH"
+            
+            # FIXED CODELOAD MIRROR PATH TO PREVENT 404 ERRORS NATIVELY
+            sed -i 's|PKG_SOURCE_URL:=.*|PKG_SOURCE_URL:=https://github.com\$(PKG_VERSION)?|g' "$HIREDIS_PATH"
+            
+            # Clear conflicting patch files
+            rm -rf openwrt/feeds/packages/libs/hiredis/patches/*
           fi
 
-      # 💾 RUNTIME COMPILER ENGINE SPEED STORAGE
+      # 💾 RUNTIME COMPILER SPEED CACHE
       - name: Setup Compiler Cache (ccache Instance)
         uses: actions/cache@v4
         with:
@@ -77,16 +84,16 @@ jobs:
           echo "CONFIG_DEVEL=y" >> .config
           echo "CONFIG_CCACHE=y" >> .config
 
-          # [AUTOMATED PRE-SELECTIONS]
+          # [AUTOMATED SELECTIONS WITH RESTORED UTILITIES]
           echo "CONFIG_PACKAGE_libopenssl=y" >> .config
           echo "CONFIG_PACKAGE_libopenssl-conf=y" >> .config
-          echo "CONFIG_PACKAGE_openssl-util=y" >> .config   # 🌟 RESTORED
+          echo "CONFIG_PACKAGE_openssl-util=y" >> .config
           echo "CONFIG_OPENSSL_WITH_ASM=y" >> .config
           echo "CONFIG_OPENSSL_ENGINE=y" >> .config
           echo "CONFIG_OPENSSL_OPTIMIZE_SPEED=y" >> .config
           echo "CONFIG_PACKAGE_libopenssl-devcrypto=y" >> .config
           
-          # 🌟 CHACHA20-POLY1305 + SAFEXCEL HARDWARE ACCELERATION TARGET MATRIX
+          # HARDWARE CHACHA20-POLY1305 API ACCELERATION TARGET MATRIX
           echo "CONFIG_PACKAGE_kmod-crypto-chacha20poly1305=y" >> .config
           echo "CONFIG_PACKAGE_kmod-crypto-hw-safexcel=y" >> .config
           echo "CONFIG_PACKAGE_kmod-cryptodev=y" >> .config
@@ -101,7 +108,7 @@ jobs:
           echo "CONFIG_PACKAGE_libunbound=y" >> .config
           echo "CONFIG_PACKAGE_unbound-daemon=y" >> .config
           echo "CONFIG_PACKAGE_unbound-control=y" >> .config
-          echo "CONFIG_PACKAGE_unbound-control-setup=y" >> .config # 🌟 RESTORED
+          echo "CONFIG_PACKAGE_unbound-control-setup=y" >> .config
           echo "CONFIG_PACKAGE_unbound-checkconf=y" >> .config
           echo "CONFIG_PACKAGE_unbound-anchor=y" >> .config
           echo "CONFIG_PACKAGE_unbound-host=y" >> .config
@@ -131,7 +138,7 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active...'; sleep 30; done" &
 
-      # 🌐 DIRECT LINEAR INTERACTIVE GATEWAY (Pinggy Tunnel)
+      # 🌐 DIRECT LINEAR INTERACTIVE GATEWAY (Pinggy Tunnel Opening After Tools are Done)
       - name: Open Secure Live Interactive Build Connection
         run: |
           echo "🔓 Adjusting host login policies for anonymous configuration overrides..."
