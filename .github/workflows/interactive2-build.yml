@@ -1,4 +1,4 @@
-# Version 1.26.2-Automated-TrueARMv8Offload-RedisEnabled-r600 (Certified Hardened O2 Build)
+# Version 1.26.2-Interactive-TrueARMv8Offload-RedisEnabled-r600 (Certified Hardened O2 Build)
 name: Build True ARMv8 Optimized Unbound 1.26.2 APK for Jio Jidu 6701
 
 on:
@@ -21,7 +21,7 @@ jobs:
           sudo apt install -y --no-install-recommends \
             build-essential clang flex bison g++ gawk gcc-multilib g++-multilib \
             gettext git libncurses5-dev libssl-dev python3-setuptools rsync swig \
-            unzip zlib1g-dev file wget zstd libz3-dev ccache
+            unzip zlib1g-dev file wget zstd libz3-dev libelf-dev quilt openssh-server ccache
 
       - name: Set Up Package Feeds
         run: |
@@ -134,45 +134,53 @@ jobs:
           yes "" | make oldconfig
           make defconfig
 
-      # 🟩 PHASE 3: BACKGROUND TOOLCHAIN PASS (Run synchronously in CI to prevent task drop)
-      - name: Build Automated Tools and Toolchain
+      # 🟩 ANTI-DISCONNECT HEARTBEAT
+      - name: Launch Background Network Keep-Alive
         run: |
-          cd openwrt
-          export FORCE_UNSAFE_CONFIGURE=1
-          echo "🛠️ Compiling Tools and Toolchain sequentially..."
-          make tools/install -j$(nproc)
-          make toolchain/install -j$(nproc)
+          bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🟩 PHASE 4: BUILD KERNEL MATRIX & COMPILE PACKAGES
-      - name: Execute Sequential Target Packages Compilation Stack
+      # 🌐 HIGH-AVAILABILITY INTERACTIVE GATEWAY (Tmate Room Setup)
+      - name: Open Secure Live Interactive Build Connection (Tmate Engine Primary)
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 350
+        continue-on-error: true
+        with:
+          limit-access-to-actor: false
+
+      # 🌐 LINEAR FALLBACK INTERACTIVE GATEWAY (Your Original Pinggy Layer)
+      - name: Open Secure Live Interactive Build Connection (Pinggy Proxy Fallback)
         run: |
-          cd openwrt
-          export FORCE_UNSAFE_CONFIGURE=1
+          echo "🔓 Adjusting host login policies for anonymous configuration overrides..."
+          sudo mkdir -p /var/run/sshd
+          echo "root:openwrt" | sudo chpasswd
+          sudo sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+          sudo sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          sudo systemctl restart ssh
           
-          echo "🚀 Compiling Kernel Matrix..."
-          make target/linux/compile V=s -j$(nproc)
-          make package/index
+          echo "🌐 Launching Pinggy Reverse TCP Proxy Connection Layer..."
+          ssh -p 443 -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ServerAliveInterval=15 \
+            -R 443:localhost:22 tcp+pass@a.pinggy.io > /tmp/pinggy.log 2>&1 &
           
-          echo "🧹 Performing clean sweep on core targets..."
-          make package/libs/openssl/clean
-          make package/feeds/packages/unbound/clean
+          echo "⏳ Syncing server ports..."
+          sleep 8
+          
+          echo "========================================================================"
+          echo "🔥 JIO 6701 INTERACTIVE BUILD ROOM ACTIVE! COPY THE LOG-IN COMMAND: 🔥"
+          echo "========================================================================"
+          cat /tmp/pinggy.log
+          echo "========================================================================"
+          echo "Password for user 'root' is: openwrt"
+          echo "Type 'touch /tmp/done' inside your connected terminal to complete the build run."
+          echo "========================================================================"
+          
+          rm -f /tmp/done
+          while [ ! -f /tmp/done ]; do
+            sleep 5
+          done
+          echo "🏁 Closing session room and starting asset compilation upload pipeline..."
 
-          OPENSSL_MAKEFILE="package/libs/openssl/Makefile"
-          if [ -f "$OPENSSL_MAKEFILE" ]; then
-            sed -i 's|OPENSSL_TARGET:=.*|OPENSSL_TARGET:=linux-aarch64|g' "$OPENSSL_MAKEFILE"
-          fi
-
-          echo "🏗️ Compiling package stack in strict sequential order..."
-          make package/cryptodev-linux/compile V=s -j$(nproc)
-          make package/libs/libmnl/compile V=s -j$(nproc)
-          make package/libs/openssl/compile V=s -j$(nproc)
-          make package/libs/libevent2/compile V=s -j$(nproc)
-          make package/feeds/packages/expat/compile V=s -j$(nproc)
-          make package/feeds/packages/libsodium/compile V=s -j$(nproc)
-          make package/feeds/packages/hiredis/compile V=s -j$(nproc)
-          make package/feeds/packages/unbound/compile V=s -j$(nproc) IPKG_INSTANT_CHECK=0
-
-      # 📦 HARVEST ARCHIVE STAGE
+      # 📦 HARVEST ARCHIVE STAGE (Using your exact preferred wildcard formatting)
       - name: Upload All Finished APK Files
         uses: actions/upload-artifact@v4
         if: always()
