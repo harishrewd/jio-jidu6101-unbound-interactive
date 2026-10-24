@@ -91,9 +91,7 @@ jobs:
           echo "CONFIG_DEVEL=y" >> .config
           echo "CONFIG_CCACHE=y" >> .config
 
-          # -----------------------------------------------------------------
           # [AUTOMATED MENUCONFIG SELECTIONS] Libraries -> SSL -> libopenssl 
-          # -----------------------------------------------------------------
           echo "CONFIG_PACKAGE_libopenssl=y" >> .config
           echo "CONFIG_PACKAGE_libopenssl-conf=y" >> .config
           echo "CONFIG_OPENSSL_WITH_ASM=y" >> .config
@@ -101,9 +99,7 @@ jobs:
           echo "CONFIG_OPENSSL_OPTIMIZE_SPEED=y" >> .config
           echo "CONFIG_PACKAGE_libopenssl-devcrypto=y" >> .config
           
-          # -----------------------------------------------------------------
           # DEPENDENT PACKAGE FLAGS MATCHING MATRIX
-          # -----------------------------------------------------------------
           echo "CONFIG_PACKAGE_kmod-cryptodev=y" >> .config
           echo "CONFIG_PACKAGE_libmnl=y" >> .config
           echo "CONFIG_PACKAGE_libevent2=y" >> .config
@@ -117,9 +113,7 @@ jobs:
           echo "CONFIG_PACKAGE_unbound-anchor=y" >> .config
           echo "CONFIG_PACKAGE_unbound-host=y" >> .config
           
-          # -----------------------------------------------------------------
-          # HARDWARE CRYPTO LOCK (YOUR TERMINAL COMMANDS INJECTED)
-          # -----------------------------------------------------------------
+          # HARDWARE CRYPTO LOCK
           sed -i 's/^TARGET_CFLAGS:=.*/TARGET_CFLAGS:=-O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53/g' rules.mk
           sed -i 's/^TARGET_CXXFLAGS:=.*/TARGET_CXXFLAGS:=-O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53/g' rules.mk
 
@@ -139,16 +133,8 @@ jobs:
         run: |
           bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
 
-      # 🌐 HIGH-AVAILABILITY INTERACTIVE GATEWAY (Tmate Room Setup)
-      - name: Open Secure Live Interactive Build Connection (Tmate Engine Primary)
-        uses: mxschmitt/action-tmate@v3
-        timeout-minutes: 350
-        continue-on-error: true
-        with:
-          limit-access-to-actor: false
-
-      # 🌐 LINEAR FALLBACK INTERACTIVE GATEWAY (Your Original Pinggy Layer)
-      - name: Open Secure Live Interactive Build Connection (Pinggy Proxy Fallback)
+      # 🌐 DIRECT LINEAR INTERACTIVE GATEWAY (Pinggy Only)
+      - name: Open Secure Live Interactive Build Connection
         run: |
           echo "🔓 Adjusting host login policies for anonymous configuration overrides..."
           sudo mkdir -p /var/run/sshd
@@ -180,7 +166,7 @@ jobs:
           done
           echo "🏁 Closing session room and starting asset compilation upload pipeline..."
 
-      # 📦 HARVEST ARCHIVE STAGE (Using your exact preferred wildcard formatting)
+      # 📦 HARVEST ARCHIVE STAGE
       - name: Upload All Finished APK Files
         uses: actions/upload-artifact@v4
         if: always()
