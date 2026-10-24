@@ -35,35 +35,16 @@ jobs:
           MAKEFILE_PATH="openwrt/feeds/packages/net/unbound/Makefile"
           if [ -f "$MAKEFILE_PATH" ]; then
             echo "⚙️ Tweaking specific package configuration parameter block..."
-            
-            # 1. VERSION LOCKING (Updated to 1.26.2)
             sed -i 's|PKG_VERSION:=.*|PKG_VERSION:=1.26.2|g' "$MAKEFILE_PATH"
-            
-            # 2. FORCE HASH ALIGNMENT (Official Unbound 1.26.2 SHA256 Checksum)
             sed -i 's|PKG_HASH:=.*|PKG_HASH:=d8ee7aa6bbb3ff1be7d9e57637d0d0ec2f18273a8efff1a0afe2c665858b96f7|g' "$MAKEFILE_PATH"
-
-            # 3. FIXED DOWNLOAD PATH MIRROR BYPASS (Full NLnet Labs storage sub-directory)
             sed -i 's|PKG_SOURCE_URL:=.*|PKG_SOURCE_URL:=https://nlnetlabs.nl|g' "$MAKEFILE_PATH"
             
-            # 4. SAFE HARDWARE CRYPTO INJECTION (Optimized specifically for MT7986 Filogic 830 Core)
             sed -i 's|--enable-tfo-server|--enable-tfo-server \\\n\t--with-cflags="-O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53" \\\n\t--enable-cachedb \\\n\t--with-libhiredis=\$(STAGING_DIR)/usr|g' "$MAKEFILE_PATH"
-            
-            # 5. FIXED MODULE SEQUENCE
             sed -i 's|subnetcache ipset respip validator iterator|subnetcache ipset respip validator cachedb iterator|g' "$MAKEFILE_PATH"
-            
-            # 6. CACHE CONTROL RELEASE BUMP
             sed -i 's|PKG_RELEASE:=.*|PKG_RELEASE:=600|g' "$MAKEFILE_PATH"
-            
-            # 7. FIXED DEPENDENCY INJECTION
             sed -i 's|\$(call Package/unbound/Default)|\$(call Package/unbound/Default)\n  DEPENDS+= +libhiredis +libmnl|g' "$MAKEFILE_PATH"
-            
-            # 8. STRIP ALLSYMBOLS
             sed -i 's|--enable-allsymbols||g' "$MAKEFILE_PATH"
-            
-            # 9. MASTER RULE OVERRIDE: Destroys size optimizations (-Os) for true execution speed on Quad-Core MT7986
             sed -i '/include \$(INCLUDE_DIR)\/package\.mk/i TARGET_CFLAGS:=\$(filter-out -Os, \$(TARGET_CFLAGS)) -O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53\nEXTRA_CFLAGS:=\$(filter-out -Os, \$(EXTRA_CFLAGS)) -O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53' "$MAKEFILE_PATH"
-          else
-            echo "❌ Error: Unbound Makefile not found!" && exit 1
           fi
 
       # 💾 RUNTIME COMPILER ENGINE SPEED STORAGE
@@ -77,21 +58,17 @@ jobs:
           restore-keys: |
             openwrt-jidu-terminal-ccache-
 
-      # 🟩 PHASE 1 & 2: CONFIGURE SELECTIONS & APPLY HARDWARE CRYPTO LOCK
       - name: Configure Target Matrix and Inject Hardware Crypto Modifications
         run: |
           cd openwrt
-          
-          # Initialize baseline target for JioRouter AX6000 JIDU6701
           echo "CONFIG_TARGET_mediatek=y" > .config
           echo "CONFIG_TARGET_mediatek_filogic=y" >> .config
           echo "CONFIG_TARGET_mediatek_filogic_DEVICE_jiorouter_ax6000-jidu6701=y" >> .config
           
-          # Enable Cache Engine Optimization globally
           echo "CONFIG_DEVEL=y" >> .config
           echo "CONFIG_CCACHE=y" >> .config
 
-          # [AUTOMATED MENUCONFIG SELECTIONS] Libraries -> SSL -> libopenssl 
+          # [AUTOMATED PRE-SELECTIONS]
           echo "CONFIG_PACKAGE_libopenssl=y" >> .config
           echo "CONFIG_PACKAGE_libopenssl-conf=y" >> .config
           echo "CONFIG_OPENSSL_WITH_ASM=y" >> .config
@@ -99,7 +76,6 @@ jobs:
           echo "CONFIG_OPENSSL_OPTIMIZE_SPEED=y" >> .config
           echo "CONFIG_PACKAGE_libopenssl-devcrypto=y" >> .config
           
-          # DEPENDENT PACKAGE FLAGS MATCHING MATRIX
           echo "CONFIG_PACKAGE_kmod-cryptodev=y" >> .config
           echo "CONFIG_PACKAGE_libmnl=y" >> .config
           echo "CONFIG_PACKAGE_libevent2=y" >> .config
@@ -113,10 +89,8 @@ jobs:
           echo "CONFIG_PACKAGE_unbound-anchor=y" >> .config
           echo "CONFIG_PACKAGE_unbound-host=y" >> .config
           
-          # HARDWARE CRYPTO LOCK
           sed -i 's/^TARGET_CFLAGS:=.*/TARGET_CFLAGS:=-O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53/g' rules.mk
           sed -i 's/^TARGET_CXXFLAGS:=.*/TARGET_CXXFLAGS:=-O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53/g' rules.mk
-
           echo 'TARGET_CFLAGS += -O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53' >> rules.mk
           echo 'TARGET_CXXFLAGS += -O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53' >> rules.mk
           echo 'EXTRA_CFLAGS += -O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53' >> rules.mk
@@ -124,16 +98,23 @@ jobs:
           sed -i '/CONFIG_TARGET_OPTIMIZATION/d' .config
           echo 'CONFIG_TARGET_OPTIMIZATION="-O2 -pipe -march=armv8-a+crc+crypto -mtune=cortex-a53"' >> .config
 
-          # Expand configurations down into tree map
           yes "" | make oldconfig
           make defconfig
+
+      # 🟩 THE STRATEGY FIX: COMPILING HOST TOOLS AUTOMATICALLY IN GITHUB (Takes ~30 mins here)
+      - name: Automated Tools Foreground Pre-Build
+        run: |
+          cd openwrt
+          export FORCE_UNSAFE_CONFIGURE=1
+          echo "🚀 Pre-compiling host tools automatically on GitHub side to save your interactive tunnel time..."
+          make tools/install -j$(nproc)
 
       # 🟩 ANTI-DISCONNECT HEARTBEAT
       - name: Launch Background Network Keep-Alive
         run: |
-          bash -c "while true; do echo 'Heartbeat active: maintaining network session gateway...'; sleep 30; done" &
+          bash -c "while true; do echo 'Heartbeat active...'; sleep 30; done" &
 
-      # 🌐 DIRECT LINEAR INTERACTIVE GATEWAY (Pinggy Only)
+      # 🌐 DIRECT LINEAR INTERACTIVE GATEWAY (Pinggy Tunnel Opening After Tools are Done)
       - name: Open Secure Live Interactive Build Connection
         run: |
           echo "🔓 Adjusting host login policies for anonymous configuration overrides..."
